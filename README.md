@@ -1,17 +1,103 @@
 # STOCK_AGENT
 
-## Stock Portfolio WhatsApp Bot
+## WhatsApp Stock Portfolio Assistant
 
-FastAPI + ARQ backend for an India-first stock portfolio WhatsApp assistant.
+STOCK_AGENT is a WhatsApp-based stock portfolio assistant built for the OpenAI x Outskill Hackathon. It lets a user chat with a WhatsApp bot, opt in, connect Zerodha through the official Kite login flow, ask portfolio-related questions, and create stock price alerts.
 
-## What is included
+The current version is a working MVP/prototype. It is deployed on Render and uses a single web service for the hackathon demo.
 
-- `app.py`: FastAPI app, WhatsApp webhook verification, job enqueue endpoints.
-- `worker.py`: ARQ worker jobs that execute WhatsApp processing, portfolio sync, and alert checks.
-- `services/`: Supabase, WhatsApp Cloud API, Zerodha, LangChain/Ollama, memory, alerts, and paper-order logic.
-- `db/schema.sql`: Supabase/Postgres tables for users, broker accounts, chat memory, summaries, alerts, and paper orders.
+## Demo Flow
 
-## Local setup
+```text
+User sends: hi
+Bot asks for consent and shares privacy/terms links
+User replies: AGREE
+Bot sends a secure Zerodha connect link
+User connects Zerodha
+User asks: show my portfolio
+User asks: set alert for INFY above 1600
+```
+
+## What It Does
+
+- Receives and replies to WhatsApp messages using Meta WhatsApp Cloud API.
+- Stores users, chat history, consent state, alerts, and broker connection data in Supabase.
+- Generates Zerodha Kite Connect login links for each WhatsApp user.
+- Stores broker access tokens in encrypted form.
+- Uses LangChain with OpenRouter for chatbot replies.
+- Maintains chat context using raw recent messages plus summarized conversation memory.
+- Supports portfolio questions, stock price questions, alert creation/cancellation, and basic profile memory.
+- Provides privacy and terms pages.
+- Supports paper-trade style buy/sell confirmation, but does not place real trades.
+
+## Tech Stack
+
+- Python
+- FastAPI
+- Meta WhatsApp Cloud API
+- Zerodha Kite Connect
+- Supabase Postgres
+- LangChain
+- OpenRouter
+- Render
+- Redis/ARQ support for production worker mode
+
+## Project Structure
+
+```text
+app.py                  FastAPI app, WhatsApp webhook, legal pages, Zerodha auth routes
+worker.py               ARQ worker jobs for production worker mode
+config.py               Environment-based settings
+schemas.py              Pydantic request/response models
+services/whatsapp.py    WhatsApp message extraction and sending
+services/chatbot.py     Main chatbot orchestration and user flows
+services/llm.py         LangChain/OpenRouter integration
+services/broker.py      Portfolio and market-data logic
+services/zerodha_auth.py Zerodha login/callback helpers
+services/supabase_db.py Supabase data access
+services/memory.py      Chat history and summarization logic
+db/schema.sql           Supabase database schema
+render.yaml             Render single-service deployment config
+deck/                   Phase 1 pitch deck files
+```
+
+## Environment Variables
+
+Create `.env` locally using `.env.example` as a reference.
+
+Important production variables:
+
+```env
+APP_ENV=production
+QUEUE_MODE=inline
+APP_BASE_URL=https://your-render-service.onrender.com
+
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+
+WHATSAPP_VERIFY_TOKEN=...
+WHATSAPP_APP_SECRET=...
+WHATSAPP_ACCESS_TOKEN=...
+WHATSAPP_PHONE_NUMBER_ID=...
+WHATSAPP_API_VERSION=v25.0
+
+BROKER_PROVIDER=zerodha
+ZERODHA_API_KEY=...
+ZERODHA_API_SECRET=...
+ZERODHA_REDIRECT_URL=https://your-render-service.onrender.com/auth/zerodha/callback
+
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL=openai/gpt-oss-120b:free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+
+TOKEN_ENCRYPTION_KEY=...
+API_SECRET=...
+```
+
+Do not commit `.env` or any real secrets.
+
+## Local Setup
 
 ```bash
 python3 -m venv .venv
@@ -20,46 +106,123 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Fill real values in `.env`, then run:
+Fill in `.env`, then run:
 
 ```bash
 uvicorn app:app --reload
+```
+
+For local ARQ worker mode, set:
+
+```env
+QUEUE_MODE=arq
+REDIS_URL=redis://localhost:6379/0
+```
+
+Then run:
+
+```bash
 arq worker.WorkerSettings
 ```
 
-## Redis
+## Database Setup
 
-Use the Upstash **Redis TCP/TLS** URL for ARQ:
+Run the SQL in:
 
-```env
-REDIS_URL=rediss://default:<password>@<host>:6379
+```text
+db/schema.sql
 ```
 
-Do not use the Upstash REST URL for ARQ.
+inside the Supabase SQL editor.
 
-## Database
+The database stores:
 
-Run `db/schema.sql` in Supabase SQL editor before starting the app.
+- WhatsApp users
+- Broker accounts
+- Holdings snapshots
+- Chat messages
+- Chat summaries
+- Pending actions
+- Alerts
+- Paper orders
+- Audit events
 
-Permanent data lives in Supabase. Redis is only for queueing, dedupe, locks, and temporary job state.
+## Render Deployment
 
-## Broker
-
-This prototype uses Zerodha Kite Connect as the broker integration:
+The hackathon deployment uses one free Render Web Service:
 
 ```env
-BROKER_PROVIDER=zerodha
-ZERODHA_API_KEY=<your Kite Connect API key>
-ZERODHA_API_SECRET=<your Kite Connect API secret>
-ZERODHA_REDIRECT_URL=http://localhost:8000/auth/zerodha/callback
+QUEUE_MODE=inline
 ```
 
-The app reads holdings and prices through Zerodha after the user connects through the Kite login flow. Real order placement is still disabled.
+Build command:
 
-## Safety defaults
+```bash
+pip install -r requirements.txt
+```
 
-- Real order placement is not implemented.
-- Buy/sell requests create pending paper trades only.
-- A paper trade is recorded only after the user replies `confirm`.
-- Broker access tokens are encrypted before storage when `TOKEN_ENCRYPTION_KEY` is configured.
-- WhatsApp signatures are required in production.
+Start command:
+
+```bash
+uvicorn app:app --host 0.0.0.0 --port $PORT
+```
+
+Health check:
+
+```text
+https://your-render-service.onrender.com/health
+```
+
+Expected response:
+
+```json
+{"status":"ok","app_env":"production"}
+```
+
+## WhatsApp Setup
+
+In Meta Developers, configure the webhook:
+
+```text
+Callback URL: https://your-render-service.onrender.com/webhooks/whatsapp
+Verify token: same value as WHATSAPP_VERIFY_TOKEN
+Subscribed field: messages
+```
+
+For the current prototype, users must be added as test recipients if using Meta's WhatsApp test number.
+
+## Zerodha Setup
+
+In Zerodha Kite Developer Console, set the redirect URL:
+
+```text
+https://your-render-service.onrender.com/auth/zerodha/callback
+```
+
+The app uses Zerodha's official login flow. Users should never share Zerodha passwords, PINs, OTPs, or API secrets in WhatsApp.
+
+## Safety And Scope
+
+This is a hackathon MVP, not a regulated financial advisory product.
+
+- Real order placement is disabled.
+- Buy/sell flows are paper-trade simulations only.
+- The bot should not provide personalized investment advice.
+- Users must opt in before portfolio features.
+- Broker tokens are encrypted before storage.
+- WhatsApp webhook signatures are verified in production.
+- Periodic alert checking requires either ARQ worker mode or an external scheduler.
+
+## Current Status
+
+The production demo flow is working:
+
+```text
+WhatsApp message
+→ Render webhook
+→ Supabase-backed user flow
+→ chatbot response
+→ WhatsApp reply
+```
+
+The MVP is ready for hackathon Phase 1 demo and can be extended later with a paid worker, scheduled alert delivery, and a real WhatsApp Business number.
