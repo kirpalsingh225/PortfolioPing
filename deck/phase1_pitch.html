@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 1 Pitch Deck - WhatsApp Portfolio Assistant</title>
+  <style>
+    @page {
+      size: 16in 9in;
+      margin: 0;
+    }
+
+    :root {
+      --ink: #172026;
+      --muted: #5f6972;
+      --line: #d7dee4;
+      --paper: #f7f9fb;
+      --green: #0c7a58;
+      --blue: #1f5fbf;
+      --gold: #b8860b;
+      --rose: #b42338;
+      --slate: #26333d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #e9edf2;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: grid;
+      gap: 24px;
+      padding: 24px;
+    }
+
+    .slide {
+      position: relative;
+      width: 16in;
+      height: 9in;
+      overflow: hidden;
+      background: var(--paper);
+      page-break-after: always;
+      border: 1px solid #cfd7df;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 8px;
+      background: linear-gradient(90deg, var(--green), var(--blue), var(--gold));
+    }
+
+    .header {
+      padding: 52px 70px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 40px;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 58px;
+      line-height: 1.02;
+      letter-spacing: 0;
+      max-width: 930px;
+    }
+
+    h2 {
+      margin: 0 0 22px;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 23px;
+      line-height: 1.36;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 16px;
+      color: var(--slate);
+      white-space: nowrap;
+    }
+
+    .content {
+      padding: 42px 70px 42px;
+      z-index: 1;
+    }
+
+    .footer {
+      z-index: 1;
+      padding: 0 70px 36px;
+      display: flex;
+      justify-content: space-between;
+      color: #6b7680;
+      font-size: 15px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 34px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      min-height: 188px;
+    }
+
+    .panel strong {
+      display: block;
+      color: var(--ink);
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .panel p,
+    li {
+      font-size: 20px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 24px;
+    }
+
+    li + li {
+      margin-top: 12px;
+    }
+
+    .journey {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .step {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      min-height: 158px;
+    }
+
+    .step .num {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      background: #e6f3ee;
+      color: var(--green);
+      border-radius: 50%;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .step strong {
+      display: block;
+      font-size: 19px;
+      margin-bottom: 8px;
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .phone-demo {
+      background: #0f1720;
+      color: #edf5f2;
+      border-radius: 8px;
+      padding: 30px;
+      min-height: 530px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+
+    .bubble {
+      max-width: 82%;
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 18px;
+      line-height: 1.34;
+    }
+
+    .bubble.user {
+      margin-left: auto;
+      background: #d7f7df;
+      color: #0c3321;
+    }
+
+    .bubble.bot {
+      background: #fff;
+      color: #202a31;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .flow {
+      display: grid;
+      gap: 13px;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 18px;
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+
+    .flow-row strong {
+      font-size: 18px;
+      color: var(--ink);
+    }
+
+    .flow-row span {
+      font-size: 17px;
+      color: var(--muted);
+    }
+
+    .stack {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-size: 18px;
+      color: var(--slate);
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--green);
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .accent {
+      color: var(--blue);
+    }
+
+    .callout {
+      margin-top: 26px;
+      background: #fff9e8;
+      border: 1px solid #ead8a7;
+      border-radius: 8px;
+      padding: 22px 26px;
+      color: #5d4713;
+      font-size: 20px;
+      line-height: 1.35;
+    }
+
+    @media print {
+      body {
+        display: block;
+        padding: 0;
+        background: #fff;
+      }
+
+      .slide {
+        border: 0;
+        width: 16in;
+        height: 9in;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="header">
+      <div>
+        <div class="eyebrow">Problem</div>
+        <h1>Retail investors need portfolio updates where they already chat.</h1>
+      </div>
+      <div class="badge">OpenAI x Outskill Hackathon - Phase 1</div>
+    </div>
+    <div class="content">
+      <div class="grid-2">
+        <div>
+          <h2>Current pain points</h2>
+          <ul>
+            <li>Portfolio checks require opening broker apps repeatedly.</li>
+            <li>Price alerts and summaries are scattered across apps.</li>
+            <li>New investors want guidance without accidental real trades.</li>
+            <li>Long conversations lose context across sessions.</li>
+          </ul>
+          <div class="callout">Phase 1 goal: prove a WhatsApp-first assistant can connect messaging, broker data, memory, and safe workflows.</div>
+        </div>
+        <div class="phone-demo">
+          <div class="bubble user">Show my portfolio</div>
+          <div class="bubble bot">Your Zerodha account is linked, but there are no holdings available right now.</div>
+          <div class="bubble user">My name is John</div>
+          <div class="bubble bot">Got it. I will call you John.</div>
+          <div class="bubble user">What is my name?</div>
+          <div class="bubble bot">Your name is John.</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Portfolio Assistant</span><span>1 / 4</span></div>
+  </section>
+
+  <section class="slide">
+    <div class="header">
+      <div>
+        <div class="eyebrow">Solution</div>
+        <h1>A WhatsApp bot that connects to Zerodha and manages portfolio conversations.</h1>
+      </div>
+      <div class="badge">MVP working locally</div>
+    </div>
+    <div class="content">
+      <div class="journey">
+        <div class="step">
+          <div class="num">1</div>
+          <strong>User messages bot</strong>
+          <span>WhatsApp Cloud API receives text from the user.</span>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <strong>Backend queues work</strong>
+          <span>FastAPI enqueues the job into Redis/ARQ.</span>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <strong>Worker processes</strong>
+          <span>Worker loads memory, profile, and intent.</span>
+        </div>
+        <div class="step">
+          <div class="num">4</div>
+          <strong>Zerodha sync</strong>
+          <span>Linked account provides holdings and portfolio status.</span>
+        </div>
+        <div class="step">
+          <div class="num">5</div>
+          <strong>Bot replies</strong>
+          <span>WhatsApp response is sent with safe portfolio context.</span>
+        </div>
+      </div>
+      <div class="metric-row">
+        <div class="metric"><strong>Live</strong><span>WhatsApp webhook and replies working.</span></div>
+        <div class="metric"><strong>Linked</strong><span>Zerodha OAuth flow completed.</span></div>
+        <div class="metric"><strong>Saved</strong><span>Supabase stores users, chat, memory, and snapshots.</span></div>
+        <div class="metric"><strong>Safe</strong><span>Buy/sell is paper-trade only in Phase 1.</span></div>
+      </div>
+    </div>
+    <div class="footer"><span>Core Product Journey</span><span>2 / 4</span></div>
+  </section>
+
+  <section class="slide">
+    <div class="header">
+      <div>
+        <div class="eyebrow">Technology</div>
+        <h1>Built as a queue-first assistant with memory, broker context, and guardrails.</h1>
+      </div>
+      <div class="badge">Phase 1 stack</div>
+    </div>
+    <div class="content architecture">
+      <div class="flow">
+        <div class="flow-row"><strong>WhatsApp</strong><span>Meta Cloud API for inbound and outbound messages.</span></div>
+        <div class="flow-row"><strong>FastAPI</strong><span>Webhook verification, message parsing, and job enqueueing.</span></div>
+        <div class="flow-row"><strong>Redis + ARQ</strong><span>Background processing for LLM, broker, and alert jobs.</span></div>
+        <div class="flow-row"><strong>Supabase</strong><span>Postgres storage for users, memory, broker tokens, alerts, and audit events.</span></div>
+        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect for account linking, holdings, and portfolio sync.</span></div>
+        <div class="flow-row"><strong>LangChain + Ollama</strong><span>gpt-oss:120b-cloud for intent, chat, and summaries.</span></div>
+      </div>
+      <div>
+        <h2>Guardrail design</h2>
+        <div class="grid-2">
+          <div class="panel">
+            <strong>No direct advice</strong>
+            <p>The assistant avoids personalized buy/sell recommendations.</p>
+          </div>
+          <div class="panel">
+            <strong>Backend truth</strong>
+            <p>Portfolio facts come from Supabase and Zerodha, not memory guesses.</p>
+          </div>
+          <div class="panel">
+            <strong>Paper trading</strong>
+            <p>Buy/sell flows require confirmation and do not place real orders.</p>
+          </div>
+          <div class="panel">
+            <strong>Context memory</strong>
+            <p>Recent messages plus long summaries keep conversations coherent.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Architecture and Safety</span><span>3 / 4</span></div>
+  </section>
+
+  <section class="slide">
+    <div class="header">
+      <div>
+        <div class="eyebrow">ICP and Next Steps</div>
+        <h1>Designed for Indian retail investors who want a low-friction portfolio companion.</h1>
+      </div>
+      <div class="badge">Demo recorded for Phase 1</div>
+    </div>
+    <div class="content">
+      <div class="grid-3">
+        <div class="panel">
+          <strong>Ideal customer</strong>
+          <p>Beginner and intermediate Indian retail investors who use WhatsApp daily and want faster portfolio awareness.</p>
+        </div>
+        <div class="panel">
+          <strong>Primary use cases</strong>
+          <p>Portfolio summary, linked-account status, price alerts, name/profile memory, and paper-trade confirmation.</p>
+        </div>
+        <div class="panel">
+          <strong>Why now</strong>
+          <p>Messaging-first workflows plus LLM memory make portfolio tools simpler and more accessible.</p>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top: 28px;">
+        <div class="panel">
+          <strong>Phase 1 deliverables completed</strong>
+          <ul>
+            <li>Working MVP demo on WhatsApp.</li>
+            <li>Zerodha account linking and portfolio sync.</li>
+            <li>Clear product journey and technical stack.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <strong>Next build milestones</strong>
+          <ul>
+            <li>Production deployment instead of ngrok.</li>
+            <li>User-facing Zerodha connect link in chat.</li>
+            <li>Richer alert UX and portfolio insights.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Audience and Roadmap</span><span>4 / 4</span></div>
+  </section>
+</body>
+</html>
