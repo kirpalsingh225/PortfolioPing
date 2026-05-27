@@ -14,6 +14,42 @@ services:
         value: openai/gpt-oss-120b:free
       - key: OPENROUTER_BASE_URL
         value: https://openrouter.ai/api/v1
+      - key: APP_BASE_URL
+        sync: false
+      - key: API_SECRET
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_API_VERSION
+        sync: false
+      - key: BROKER_PROVIDER
+        value: zerodha
+      - key: ZERODHA_API_KEY
+        sync: false
+      - key: ZERODHA_API_SECRET
+        sync: false
+      - key: ZERODHA_REDIRECT_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: MAX_RAW_MESSAGES
+        value: "10"
+      - key: SUMMARY_TRIGGER_MESSAGES
+        value: "18"
 
   - type: worker
     name: stock-portfolio-whatsapp-worker
@@ -30,3 +66,39 @@ services:
         value: openai/gpt-oss-120b:free
       - key: OPENROUTER_BASE_URL
         value: https://openrouter.ai/api/v1
+      - key: APP_BASE_URL
+        sync: false
+      - key: API_SECRET
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_API_VERSION
+        sync: false
+      - key: BROKER_PROVIDER
+        value: zerodha
+      - key: ZERODHA_API_KEY
+        sync: false
+      - key: ZERODHA_API_SECRET
+        sync: false
+      - key: ZERODHA_REDIRECT_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: MAX_RAW_MESSAGES
+        value: "10"
+      - key: SUMMARY_TRIGGER_MESSAGES
+        value: "18"
