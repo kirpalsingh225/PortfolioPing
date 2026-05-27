@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
+from uuid import uuid4
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 
 from config import get_settings
@@ -10,17 +11,45 @@ from services.redis_queue import get_redis_pool
 from services.security import verify_meta_signature
 from services.zerodha_auth import build_login_url, exchange_request_token
 from services.whatsapp import extract_text_messages
+from worker import check_price_alerts, process_whatsapp_message, sync_all_portfolios
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.redis = await get_redis_pool()
+    app.state.redis = None
+    if settings.queue_mode == "arq":
+        app.state.redis = await get_redis_pool()
     yield
-    await app.state.redis.close()
+    if app.state.redis is not None:
+        await app.state.redis.close()
 
 
 settings = get_settings()
 app = FastAPI(title="Stock Portfolio WhatsApp Bot", version="0.1.0", lifespan=lifespan)
+
+
+async def enqueue_job(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    function_name: str,
+    *args: Any,
+    job_id: str | None = None,
+) -> EnqueueResponse:
+    if settings.queue_mode == "inline":
+        task_map = {
+            "process_whatsapp_message": process_whatsapp_message,
+            "sync_all_portfolios": sync_all_portfolios,
+            "check_price_alerts": check_price_alerts,
+        }
+        background_tasks.add_task(task_map[function_name], None, *args)
+        return EnqueueResponse(queued=True, job_id=job_id or f"inline:{uuid4()}", reason="inline")
+
+    job = await request.app.state.redis.enqueue_job(function_name, *args, _job_id=job_id)
+    return EnqueueResponse(
+        queued=job is not None,
+        job_id=job.job_id if job else None,
+        reason=None if job else "duplicate_or_rejected",
+    )
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -70,7 +99,7 @@ async def verify_whatsapp_webhook(
 
 
 @app.post("/webhooks/whatsapp", response_model=list[EnqueueResponse])
-async def whatsapp_webhook(request: Request) -> list[EnqueueResponse]:
+async def whatsapp_webhook(request: Request, background_tasks: BackgroundTasks) -> list[EnqueueResponse]:
     body = await request.body()
     signature = request.headers.get("x-hub-signature-256")
     if not verify_meta_signature(body, signature):
@@ -81,55 +110,57 @@ async def whatsapp_webhook(request: Request) -> list[EnqueueResponse]:
     responses: list[EnqueueResponse] = []
 
     for message in messages:
-        job = await request.app.state.redis.enqueue_job(
+        responses.append(await enqueue_job(
+            request,
+            background_tasks,
             "process_whatsapp_message",
             message.model_dump(),
-            _job_id=f"wa:{message.message_id}",
-        )
-        responses.append(
-            EnqueueResponse(
-                queued=job is not None,
-                job_id=job.job_id if job else None,
-                reason=None if job else "duplicate_or_rejected",
-            )
-        )
+            job_id=f"wa:{message.message_id}",
+        ))
 
     return responses
 
 
 @app.post("/debug/enqueue-message", response_model=EnqueueResponse)
-async def debug_enqueue_message(message: WhatsAppIncomingMessage, request: Request) -> EnqueueResponse:
+async def debug_enqueue_message(
+    message: WhatsAppIncomingMessage,
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> EnqueueResponse:
     if settings.app_env == "production":
         raise HTTPException(status_code=404, detail="Not found")
 
-    job = await request.app.state.redis.enqueue_job(
+    return await enqueue_job(
+        request,
+        background_tasks,
         "process_whatsapp_message",
         message.model_dump(),
-        _job_id=f"debug:{message.message_id}",
-    )
-    return EnqueueResponse(
-        queued=job is not None,
-        job_id=job.job_id if job else None,
-        reason=None if job else "duplicate_or_rejected",
+        job_id=f"debug:{message.message_id}",
     )
 
 
 @app.post("/jobs/sync-portfolios", response_model=EnqueueResponse)
-async def enqueue_portfolio_sync(request: Request, api_secret: str) -> EnqueueResponse:
+async def enqueue_portfolio_sync(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    api_secret: str,
+) -> EnqueueResponse:
     if api_secret != settings.api_secret:
         raise HTTPException(status_code=403, detail="Invalid API secret")
 
-    job = await request.app.state.redis.enqueue_job("sync_all_portfolios")
-    return EnqueueResponse(queued=job is not None, job_id=job.job_id if job else None)
+    return await enqueue_job(request, background_tasks, "sync_all_portfolios")
 
 
 @app.post("/jobs/check-alerts", response_model=EnqueueResponse)
-async def enqueue_alert_check(request: Request, api_secret: str) -> EnqueueResponse:
+async def enqueue_alert_check(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    api_secret: str,
+) -> EnqueueResponse:
     if api_secret != settings.api_secret:
         raise HTTPException(status_code=403, detail="Invalid API secret")
 
-    job = await request.app.state.redis.enqueue_job("check_price_alerts")
-    return EnqueueResponse(queued=job is not None, job_id=job.job_id if job else None)
+    return await enqueue_job(request, background_tasks, "check_price_alerts")
 
 
 @app.get("/auth/zerodha/login-url")

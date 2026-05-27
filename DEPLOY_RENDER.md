@@ -1,17 +1,21 @@
 # Render Deployment
 
-This app needs two Render services:
+This app can run on one free Render Web Service for a prototype:
 
-- Web Service: FastAPI webhook/API
-- Background Worker: ARQ worker
+- Web Service: FastAPI webhook/API plus inline background tasks
+
+For a higher-volume production setup, switch `QUEUE_MODE=arq` and add a paid
+Background Worker running `arq worker.WorkerSettings`.
 
 ## 1. Push Code To GitHub
 
 Make sure `.env` and `secrets.md` are not committed.
 
-## 2. Create Redis
+## 2. Redis
 
-Use Upstash Redis and copy the TCP/TLS URL:
+Redis is optional when `QUEUE_MODE=inline`.
+
+If you later use the ARQ worker mode, use Upstash Redis and copy the TCP/TLS URL:
 
 ```env
 REDIS_URL=rediss://default:<password>@<host>:6379
@@ -19,30 +23,31 @@ REDIS_URL=rediss://default:<password>@<host>:6379
 
 Do not use the Upstash REST URL for ARQ.
 
-## 3. Create Render Blueprint
+## 3. Create Render Web Service
 
 In Render:
 
 ```text
-New → Blueprint → connect GitHub repo → select render.yaml
+New → Web Service → connect GitHub repo → select this repo
 ```
 
-Render will create:
+Use:
 
 ```text
-stock-portfolio-whatsapp-api
-stock-portfolio-whatsapp-worker
+Build command: pip install -r requirements.txt
+Start command: uvicorn app:app --host 0.0.0.0 --port $PORT
 ```
 
-## 4. Add Environment Variables To Both Services
+## 4. Add Environment Variables
 
-Add the same secrets to both the web service and worker:
+Add these to the web service:
 
 ```env
+APP_ENV=production
+QUEUE_MODE=inline
 APP_BASE_URL=https://<render-api-url>
 API_SECRET=<strong-random-secret>
 TOKEN_ENCRYPTION_KEY=<fernet-key>
-REDIS_URL=<upstash-rediss-url>
 SUPABASE_URL=<supabase-url>
 SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
 WHATSAPP_VERIFY_TOKEN=<your-verify-token>
@@ -61,6 +66,8 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 MAX_RAW_MESSAGES=10
 SUMMARY_TRIGGER_MESSAGES=18
 ```
+
+Only add `REDIS_URL=<upstash-rediss-url>` if you are using `QUEUE_MODE=arq`.
 
 Generate Fernet key:
 

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     token_encryption_key: str = "dummy-fernet-key-change-me"
 
     redis_url: str = "redis://localhost:6379/0"
+    queue_mode: str = "arq"
 
     supabase_url: str = "https://dummy-project.supabase.co"
     supabase_service_role_key: str = "dummy-service-role-key"
