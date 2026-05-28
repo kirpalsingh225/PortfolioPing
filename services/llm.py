@@ -58,7 +58,7 @@ Return only raw valid JSON. Do not wrap it in markdown. Do not add explanation.
 
 JSON schema:
 {{
-  "intent": "portfolio_summary|stock_price_query|create_alert|update_alert|cancel_alert|paper_buy|paper_sell|web_search|general_question",
+  "intent": "portfolio_summary|stock_price_query|create_alert|update_alert|cancel_alert|add_watchlist|remove_watchlist|show_watchlist|paper_buy|paper_sell|web_search|general_question",
   "symbol": "string or null",
   "exchange": "NSE or BSE or null",
   "quantity": "integer or null",
@@ -75,6 +75,9 @@ Intent rules:
 - create_alert: new alert such as "alert me if INFY goes above 1600".
 - update_alert: change an existing alert threshold/condition.
 - cancel_alert: delete/cancel/stop alerts.
+- add_watchlist: user wants to add/save/track a stock in their watchlist. Extract symbol if present.
+- remove_watchlist: user wants to remove/delete/unwatch a stock from their watchlist. Extract symbol if present.
+- show_watchlist: user asks what is in their watchlist or wants to view/list watched stocks.
 - paper_buy / paper_sell: only when the user clearly wants to simulate a buy/sell order.
 - web_search: recent, current, latest, news, rules, events, or public information that may have changed and is not in backend context.
 - general_question: greetings, app help, account/profile questions, education, "should I buy", vague finance questions, or missing required details.
@@ -93,9 +96,9 @@ Conversation summary:
 User message:
 {text}
 """
-    response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
-    content = response.content if isinstance(response.content, str) else str(response.content)
     try:
+        response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
+        content = response.content if isinstance(response.content, str) else str(response.content)
         return ChatIntent.model_validate(json.loads(content))
     except Exception:
         return ChatIntent(intent="general_question", confidence=0.0, needs_confirmation=True)
@@ -135,8 +138,14 @@ Reply rules:
 - Keep the response rich but compact for WhatsApp. Avoid long disclaimers.
 - Do not reveal internal ids, phone numbers, access tokens, API keys, signatures, raw JSON, or system details.
 """
-    response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
-    return response.content if isinstance(response.content, str) else str(response.content)
+    try:
+        response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
+        return response.content if isinstance(response.content, str) else str(response.content)
+    except Exception:
+        return (
+            "I’m having trouble reaching the AI model right now.\n\n"
+            "You can still use quick commands like /watchlist, /watch TCS, /connect, or /search latest market news."
+        )
 
 
 async def generate_web_search_reply(text: str, summary: str, recent_messages: list[dict], search_context: dict) -> str:
@@ -173,8 +182,11 @@ Rules:
 - If a search result date is unclear or older than the user's wording like "today", say the live table should be checked from the linked source.
 - Keep it readable on WhatsApp.
 """
-    response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
-    return response.content if isinstance(response.content, str) else str(response.content)
+    try:
+        response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
+        return response.content if isinstance(response.content, str) else str(response.content)
+    except Exception:
+        return "I found search results, but I’m having trouble summarizing them right now. Please try again in a bit."
 
 
 def _maybe_market_movers_reply(text: str, search_context: dict) -> str | None:

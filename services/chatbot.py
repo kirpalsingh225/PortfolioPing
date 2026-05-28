@@ -1,5 +1,3 @@
-import re
-
 from config import get_settings
 from schemas import PaperOrderDraft, WhatsAppIncomingMessage
 from services.alerts import cancel_price_alerts, create_price_alert
@@ -55,13 +53,6 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
         await maybe_summarize(thread_id, user_id)
         return
 
-    watchlist_reply = await _maybe_handle_watchlist(user_id, message.text)
-    if watchlist_reply:
-        await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=watchlist_reply)
-        await send_whatsapp_text(message.from_phone, watchlist_reply)
-        await maybe_summarize(thread_id, user_id)
-        return
-
     pending_reply = await _maybe_handle_pending_action(user_id, thread_id, message.text)
     if pending_reply:
         await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=pending_reply)
@@ -89,6 +80,14 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
     if direct_reply:
         await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=direct_reply)
         await send_whatsapp_text(message.from_phone, direct_reply)
+        await create_audit_event(user_id, "whatsapp_message_processed", {"intent": intent.model_dump()})
+        await maybe_summarize(thread_id, user_id)
+        return
+
+    watchlist_reply = await _maybe_handle_watchlist_intent(user_id, intent)
+    if watchlist_reply:
+        await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=watchlist_reply)
+        await send_whatsapp_text(message.from_phone, watchlist_reply)
         await create_audit_event(user_id, "whatsapp_message_processed", {"intent": intent.model_dump()})
         await maybe_summarize(thread_id, user_id)
         return
@@ -223,6 +222,21 @@ async def _maybe_handle_command(user_id: str, thread_id: str, text: str) -> str 
         search_context = await search_web(query)
         return await generate_web_search_reply(query, summary, recent_messages, search_context)
 
+    if normalized == "/watchlist":
+        return await _format_watchlist(user_id)
+
+    if normalized.startswith("/watch "):
+        symbol, exchange = _parse_watch_command(text)
+        if not symbol:
+            return "Send it like: /watch TCS"
+        return await _add_watchlist_symbol(user_id, symbol, exchange)
+
+    if normalized.startswith("/unwatch "):
+        symbol, exchange = _parse_watch_command(text)
+        if not symbol:
+            return "Send it like: /unwatch TCS"
+        return await _remove_watchlist_symbol(user_id, symbol, exchange)
+
     if normalized not in {"/connect", "/reconnect", "reconnect zerodha", "connect zerodha"}:
         return None
 
@@ -236,42 +250,19 @@ async def _maybe_handle_command(user_id: str, thread_id: str, text: str) -> str 
     return None
 
 
-async def _maybe_handle_watchlist(user_id: str, text: str) -> str | None:
-    normalized = text.strip().lower()
-    mentions_watchlist = "watchlist" in normalized or "watch list" in normalized
-
-    if normalized in {"/watchlist", "show watchlist", "my watchlist", "watchlist"}:
+async def _maybe_handle_watchlist_intent(user_id: str, intent) -> str | None:
+    if intent.intent == "show_watchlist":
         return await _format_watchlist(user_id)
 
-    if normalized.startswith("/watch "):
-        symbol = _extract_symbol(text)
-        if not symbol:
-            return "Send it like: /watch TCS"
-        return await _add_watchlist_symbol(user_id, symbol, _extract_exchange(text))
-
-    if normalized.startswith("/unwatch "):
-        symbol = _extract_symbol(text)
-        if not symbol:
-            return "Send it like: /unwatch TCS"
-        return await _remove_watchlist_symbol(user_id, symbol, _extract_exchange(text))
-
-    if not mentions_watchlist:
-        return None
-
-    if any(word in normalized for word in ["add", "save", "put", "track"]):
-        symbol = _extract_symbol(text)
-        if not symbol:
+    if intent.intent == "add_watchlist":
+        if not intent.symbol:
             return "Which stock should I add to your watchlist? Send it like: add TCS to watchlist."
-        return await _add_watchlist_symbol(user_id, symbol, _extract_exchange(text))
+        return await _add_watchlist_symbol(user_id, intent.symbol, intent.exchange or "NSE")
 
-    if any(word in normalized for word in ["remove", "delete", "unwatch"]):
-        symbol = _extract_symbol(text)
-        if not symbol:
+    if intent.intent == "remove_watchlist":
+        if not intent.symbol:
             return "Which stock should I remove from your watchlist? Send it like: remove TCS from watchlist."
-        return await _remove_watchlist_symbol(user_id, symbol, _extract_exchange(text))
-
-    if any(word in normalized for word in ["what", "show", "list", "which", "all", "stocks"]):
-        return await _format_watchlist(user_id)
+        return await _remove_watchlist_symbol(user_id, intent.symbol, intent.exchange or "NSE")
 
     return None
 
@@ -312,49 +303,13 @@ def _watchlist_setup_message() -> str:
     return "Watchlist storage is not set up yet. Run the latest db/schema.sql in Supabase, then try again."
 
 
-def _extract_exchange(text: str) -> str:
-    return "BSE" if re.search(r"\bbse\b", text, flags=re.IGNORECASE) else "NSE"
-
-
-def _extract_symbol(text: str) -> str | None:
-    stopwords = {
-        "A",
-        "ADD",
-        "ALL",
-        "AN",
-        "BSE",
-        "CAN",
-        "DELETE",
-        "FROM",
-        "IN",
-        "INTO",
-        "LIST",
-        "ME",
-        "MY",
-        "NSE",
-        "ON",
-        "PLEASE",
-        "PUT",
-        "REMOVE",
-        "SAVE",
-        "SHOW",
-        "STOCK",
-        "STOCKS",
-        "THE",
-        "TO",
-        "TRACK",
-        "UNWATCH",
-        "WATCH",
-        "WATCHLIST",
-        "WHAT",
-        "WHICH",
-    }
-    for token in re.findall(r"[A-Za-z][A-Za-z0-9&.-]{0,14}", text):
-        symbol = token.strip(".-").upper()
-        if len(symbol) < 2 or symbol in stopwords:
-            continue
-        return symbol
-    return None
+def _parse_watch_command(text: str) -> tuple[str | None, str]:
+    parts = text.strip().split()
+    if len(parts) < 2:
+        return None, "NSE"
+    symbol = parts[1].strip().upper()
+    exchange = next((part.upper() for part in parts[2:] if part.upper() in {"NSE", "BSE"}), "NSE")
+    return symbol, exchange
 
 
 async def _maybe_direct_profile_question(user_id: str, text: str) -> str | None:
