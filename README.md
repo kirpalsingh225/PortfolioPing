@@ -16,6 +16,8 @@ Bot sends a secure Zerodha connect link
 User connects Zerodha
 User asks: show my portfolio
 User asks: set alert for INFY above 1600
+User asks: /search latest news about INFY
+Bot answers with source links when web search is needed
 ```
 
 ## What It Does
@@ -27,7 +29,8 @@ User asks: set alert for INFY above 1600
 - Uses LangChain with OpenRouter for chatbot replies.
 - Uses Tavily web search for current public information when needed.
 - Maintains chat context using cleaned backend state, raw recent messages, and summarized conversation memory.
-- Supports portfolio questions, stock price questions, alert creation/cancellation, and basic profile memory.
+- Supports portfolio questions, stock price questions, alert creation/cancellation, source-backed web search, and basic profile memory.
+- Supports simple user control commands such as `/connect` for a fresh Zerodha login link and `/search` for forced web search.
 - Supports scheduled alert checking through an external cron trigger in the free Render deployment.
 - Provides privacy and terms pages.
 - Supports paper-trade style buy/sell confirmation, but does not place real trades.
@@ -201,7 +204,7 @@ Recommended MVP schedule:
 Every 5-10 minutes
 ```
 
-This checks enabled alerts against Zerodha LTP prices and sends a WhatsApp alert when the condition is met.
+This path is wired for scheduled checks. Live alert delivery requires Zerodha quote/LTP permission for the connected Kite app. Without that permission, alerts remain saved in Supabase but cannot be triggered from Zerodha live prices.
 
 ## Web Search
 
@@ -221,6 +224,8 @@ Forced search command:
 ```
 
 Search replies include source links and remain informational only, not investment advice.
+
+The bot uses web search only when the user asks for recent/current public information, or when the `/search` command is used. Portfolio facts still come from Supabase and Zerodha, not from web search.
 
 ## WhatsApp Setup
 
@@ -268,4 +273,11 @@ WhatsApp message
 → WhatsApp reply
 ```
 
-The MVP is ready for hackathon Phase 1 demo and can be extended later with slash commands, a paid worker, richer portfolio insights, and a real WhatsApp Business number.
+The MVP is ready for hackathon Phase 1 demo and now includes consent onboarding, Zerodha linking, WhatsApp chat, cleaned LLM context, Tavily search with sources, saved alerts, and external cron wiring.
+
+Known prototype limitations:
+
+- Mixed multi-part questions currently follow the primary detected intent first.
+- Live alert triggering depends on Zerodha LTP/quote permission.
+- Real trading is disabled; buy/sell flows are confirmation-only paper simulations.
+- A real WhatsApp Business number is needed before opening access beyond Meta test recipients.

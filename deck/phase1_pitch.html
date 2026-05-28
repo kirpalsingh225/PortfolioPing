@@ -371,8 +371,8 @@
           <div class="bubble bot">Welcome. Please review Privacy and Terms, then reply AGREE to continue.</div>
           <div class="bubble user">AGREE</div>
           <div class="bubble bot">Thanks. Next, connect Zerodha securely through the official login link.</div>
-          <div class="bubble user">set alert for INFY above 1600</div>
-          <div class="bubble bot">Alert created for NSE:INFY above 1600. I will notify you when it triggers.</div>
+          <div class="bubble user">/search latest news about INFY</div>
+          <div class="bubble bot">Here are recent sources I found. This is informational only, not investment advice.</div>
         </div>
       </div>
     </div>
@@ -418,8 +418,8 @@
       <div class="metric-row">
         <div class="metric"><strong>Live</strong><span>Render webhook replies on real WhatsApp.</span></div>
         <div class="metric"><strong>Opt-in</strong><span>Privacy/terms consent is stored per user.</span></div>
-        <div class="metric"><strong>Context</strong><span>Cleaned prompt context uses profile, broker state, and memory.</span></div>
-        <div class="metric"><strong>Alerts</strong><span>External cron checks prices and sends WhatsApp alerts.</span></div>
+        <div class="metric"><strong>Search</strong><span>Tavily adds source-backed answers for current public info.</span></div>
+        <div class="metric"><strong>Alerts</strong><span>Saved alerts plus cron path; live triggers need quote permission.</span></div>
       </div>
     </div>
     <div class="footer"><span>Core Product Journey</span><span>2 / 4</span></div>
@@ -440,8 +440,8 @@
         <div class="flow-row"><strong>Render</strong><span>Single free web service using QUEUE_MODE=inline for the MVP demo.</span></div>
         <div class="flow-row"><strong>cron-job.org</strong><span>Scheduled HTTP trigger checks saved alerts every few minutes.</span></div>
         <div class="flow-row"><strong>Supabase</strong><span>Postgres storage for users, memory, broker tokens, alerts, and audit events.</span></div>
-        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect login, holdings, and LTP prices.</span></div>
-        <div class="flow-row"><strong>LangChain + OpenRouter</strong><span>Improved prompts for intent, safe replies, and summaries.</span></div>
+        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect login, holdings, and quote-gated LTP prices.</span></div>
+        <div class="flow-row"><strong>LLM + Web Search</strong><span>OpenRouter handles chat and intent; Tavily adds sourced current info.</span></div>
       </div>
       <div>
         <h2>Guardrail design</h2>
@@ -452,7 +452,7 @@
           </div>
           <div class="panel">
             <strong>Backend truth</strong>
-            <p>LLM receives cleaned context and never guesses holdings, prices, or broker status.</p>
+            <p>LLM receives cleaned context and uses links for searched public facts.</p>
           </div>
           <div class="panel">
             <strong>Paper trading</strong>
@@ -484,7 +484,7 @@
         </div>
         <div class="panel">
           <strong>Primary use cases</strong>
-          <p>Consent onboarding, Zerodha connect, portfolio summary, scheduled price alerts, profile memory, and paper-trade confirmation.</p>
+          <p>Consent onboarding, Zerodha connect, portfolio summary, saved price alerts, source-backed search, profile memory, and paper-trade confirmation.</p>
         </div>
         <div class="panel">
           <strong>Why now</strong>
@@ -497,14 +497,14 @@
           <ul>
             <li>Deployed WhatsApp bot on Render.</li>
             <li>Consent flow and Zerodha connect link working.</li>
-            <li>Alert creation plus scheduled checker configured.</li>
+            <li>Tavily web search and scheduled alert checker configured.</li>
           </ul>
         </div>
         <div class="panel">
           <strong>Next build milestones</strong>
           <ul>
-            <li>Optional slash commands for safer user control.</li>
-            <li>Richer portfolio insights and alert UX.</li>
+            <li>Zerodha quote permission for live alert triggers.</li>
+            <li>Multi-intent handling and richer portfolio insights.</li>
             <li>Real WhatsApp Business number after prototype validation.</li>
           </ul>
         </div>
