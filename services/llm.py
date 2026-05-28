@@ -158,9 +158,11 @@ Write a concise WhatsApp reply using only the web search context.
 
 Rules:
 - Include useful source links from the search results.
-- If search is disabled, missing, failed, or has no useful results, say web search is unavailable right now.
+- If search is disabled, missing, failed, or has zero results, say web search is unavailable right now.
+- If results exist but do not fully answer the question, give the useful partial answer from sources and clearly say what is missing.
 - Do not invent facts beyond the provided search snippets.
 - If the user asks for stock recommendations, do not tell them what to buy or sell. Summarize public context and suggest factors to evaluate.
+- For "top gainers", "top losers", or "market movers" queries, summarize only what the provided sources say. If the snippets do not contain a complete ranked list, share the source links and tell the user to open them for the live table.
 - Keep it readable on WhatsApp.
 """
     response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
