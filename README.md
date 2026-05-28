@@ -1,10 +1,14 @@
-# STOCK_AGENT
+# PortfolioPing
 
 ## WhatsApp Stock Portfolio Assistant
 
-STOCK_AGENT is a WhatsApp-based stock portfolio assistant built for the OpenAI x Outskill Hackathon. It lets a user chat with a WhatsApp bot, opt in, connect Zerodha through the official Kite login flow, ask portfolio-related questions, and create stock price alerts.
+PortfolioPing is a WhatsApp-based stock portfolio assistant built for the OpenAI x Outskill Hackathon. It lets a user chat with a WhatsApp bot, opt in, connect Zerodha through the official Kite login flow, ask portfolio-related questions, manage a watchlist, and create stock price alerts.
 
 The current version is a working MVP/prototype. It is deployed on Render and uses a single web service for the hackathon demo.
+
+## Demo Video
+
+https://github.com/kirpalsingh225/PortfolioPing/raw/main/assets/VID_20260528_225547_1.mp4
 
 ## Demo Flow
 
