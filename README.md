@@ -8,7 +8,7 @@ The current version is a working MVP/prototype. It is deployed on Render and use
 
 ## Demo Video
 
-https://github.com/kirpalsingh225/PortfolioPing/raw/main/assets/VID_20260528_225547_1.mp4
+[Watch the demo video](https://github.com/kirpalsingh225/PortfolioPing/blob/main/assets/VID_20260528_225547_1.mp4)
 
 ## Demo Flow
 
