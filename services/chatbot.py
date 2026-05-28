@@ -42,6 +42,13 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
         await maybe_summarize(thread_id, user_id)
         return
 
+    command_reply = await _maybe_handle_command(user_id, message.text)
+    if command_reply:
+        await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=command_reply)
+        await send_whatsapp_text(message.from_phone, command_reply)
+        await maybe_summarize(thread_id, user_id)
+        return
+
     pending_reply = await _maybe_handle_pending_action(user_id, thread_id, message.text)
     if pending_reply:
         await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=pending_reply)
@@ -177,6 +184,21 @@ async def _maybe_handle_onboarding(user_id: str, text: str) -> str | None:
             "Connect it securely here:\n"
             f"{build_login_url(user_id)}\n\n"
             "After linking, ask: show my portfolio."
+        )
+
+    return None
+
+
+async def _maybe_handle_command(user_id: str, text: str) -> str | None:
+    normalized = text.strip().lower()
+    if normalized not in {"/connect", "/reconnect", "reconnect zerodha", "connect zerodha"}:
+        return None
+
+    if normalized in {"/connect", "/reconnect", "reconnect zerodha", "connect zerodha"}:
+        return (
+            "Here is your fresh Zerodha connect link:\n"
+            f"{build_login_url(user_id)}\n\n"
+            "Use this when your Zerodha session expires or you want to reconnect."
         )
 
     return None
