@@ -88,28 +88,58 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
 
 
 async def _build_backend_context(user_id: str, intent, text: str) -> dict:
-    if intent.intent == "portfolio_summary":
-        return {
-            "user_profile": await get_user_profile(user_id),
-            "broker_account": await get_active_broker_account(user_id),
-            "portfolio": await get_portfolio_summary(user_id),
-            "zerodha_connect_url": build_login_url(user_id),
-            "user_message": text,
-        }
-    if intent.intent == "stock_price_query" and intent.symbol:
-        return {
-            "user_profile": await get_user_profile(user_id),
-            "broker_account": await get_active_broker_account(user_id),
-            "price": await get_current_price(user_id, intent.symbol, intent.exchange or "NSE"),
-            "zerodha_connect_url": build_login_url(user_id),
-            "user_message": text,
-        }
-    return {
-        "user_profile": await get_user_profile(user_id),
-        "broker_account": await get_active_broker_account(user_id),
+    user_profile = await get_user_profile(user_id)
+    broker_account = await get_active_broker_account(user_id)
+    base_context = {
+        "assistant_mode": "whatsapp_portfolio_assistant",
+        "user_profile": _llm_user_profile(user_profile),
+        "broker": _llm_broker_context(broker_account),
         "intent": intent.model_dump(),
         "zerodha_connect_url": build_login_url(user_id),
         "user_message": text,
+        "available_actions": [
+            "answer_general_question",
+            "show_portfolio_if_connected",
+            "fetch_stock_price_if_connected",
+            "create_or_cancel_price_alert",
+            "simulate_paper_trade_with_confirmation",
+        ],
+        "important_limits": [
+            "not_investment_advice",
+            "real_order_placement_disabled",
+            "do_not_request_passwords_otps_or_api_keys",
+        ],
+    }
+
+    if intent.intent == "portfolio_summary":
+        base_context["portfolio"] = await get_portfolio_summary(user_id)
+        return base_context
+    if intent.intent == "stock_price_query" and intent.symbol:
+        base_context["price"] = await get_current_price(user_id, intent.symbol, intent.exchange or "NSE")
+        return base_context
+    return base_context
+
+
+def _llm_user_profile(user_profile: dict) -> dict:
+    return {
+        "name": user_profile.get("name"),
+        "whatsapp_opted_in": bool(user_profile.get("whatsapp_opted_in")),
+        "terms_accepted": bool(user_profile.get("terms_accepted_at")),
+        "privacy_accepted": bool(user_profile.get("privacy_accepted_at")),
+    }
+
+
+def _llm_broker_context(broker_account: dict | None) -> dict:
+    if not broker_account:
+        return {
+            "provider": "zerodha",
+            "connected": False,
+            "message": "Zerodha account is not connected.",
+        }
+    return {
+        "provider": broker_account.get("broker") or "zerodha",
+        "connected": True,
+        "broker_user_id": broker_account.get("broker_user_id"),
     }
 
 

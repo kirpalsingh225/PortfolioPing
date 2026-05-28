@@ -367,12 +367,12 @@
           <div class="callout">Phase 1 goal: prove a WhatsApp-first assistant can connect messaging, broker data, memory, and safe workflows.</div>
         </div>
         <div class="phone-demo">
-          <div class="bubble user">Show my portfolio</div>
-          <div class="bubble bot">Your Zerodha account is linked, but there are no holdings available right now.</div>
-          <div class="bubble user">My name is John</div>
-          <div class="bubble bot">Got it. I will call you John.</div>
-          <div class="bubble user">What is my name?</div>
-          <div class="bubble bot">Your name is John.</div>
+          <div class="bubble user">hi</div>
+          <div class="bubble bot">Welcome. Please review Privacy and Terms, then reply AGREE to continue.</div>
+          <div class="bubble user">AGREE</div>
+          <div class="bubble bot">Thanks. Next, connect Zerodha securely through the official login link.</div>
+          <div class="bubble user">set alert for INFY above 1600</div>
+          <div class="bubble bot">Alert created for NSE:INFY above 1600. I will notify you when it triggers.</div>
         </div>
       </div>
     </div>
@@ -385,7 +385,7 @@
         <div class="eyebrow">Solution</div>
         <h1>A WhatsApp bot that connects to Zerodha and manages portfolio conversations.</h1>
       </div>
-      <div class="badge">MVP working locally</div>
+      <div class="badge">MVP deployed on Render</div>
     </div>
     <div class="content">
       <div class="journey">
@@ -396,18 +396,18 @@
         </div>
         <div class="step">
           <div class="num">2</div>
-          <strong>Backend queues work</strong>
-          <span>FastAPI enqueues the job into Redis/ARQ.</span>
+          <strong>Backend processes</strong>
+          <span>FastAPI handles the webhook with inline background tasks for the free demo.</span>
         </div>
         <div class="step">
           <div class="num">3</div>
-          <strong>Worker processes</strong>
-          <span>Worker loads memory, profile, and intent.</span>
+          <strong>Context layer</strong>
+          <span>Bot loads user profile, consent, broker state, memory, and intent.</span>
         </div>
         <div class="step">
           <div class="num">4</div>
-          <strong>Zerodha sync</strong>
-          <span>Linked account provides holdings and portfolio status.</span>
+          <strong>Zerodha connect</strong>
+          <span>Official Kite login links each WhatsApp user to their own account.</span>
         </div>
         <div class="step">
           <div class="num">5</div>
@@ -416,10 +416,10 @@
         </div>
       </div>
       <div class="metric-row">
-        <div class="metric"><strong>Live</strong><span>WhatsApp webhook and replies working.</span></div>
-        <div class="metric"><strong>Linked</strong><span>Zerodha OAuth flow completed.</span></div>
-        <div class="metric"><strong>Saved</strong><span>Supabase stores users, chat, memory, and snapshots.</span></div>
-        <div class="metric"><strong>Safe</strong><span>Buy/sell is paper-trade only in Phase 1.</span></div>
+        <div class="metric"><strong>Live</strong><span>Render webhook replies on real WhatsApp.</span></div>
+        <div class="metric"><strong>Opt-in</strong><span>Privacy/terms consent is stored per user.</span></div>
+        <div class="metric"><strong>Context</strong><span>Cleaned prompt context uses profile, broker state, and memory.</span></div>
+        <div class="metric"><strong>Alerts</strong><span>External cron checks prices and sends WhatsApp alerts.</span></div>
       </div>
     </div>
     <div class="footer"><span>Core Product Journey</span><span>2 / 4</span></div>
@@ -429,18 +429,19 @@
     <div class="header">
       <div>
         <div class="eyebrow">Technology</div>
-        <h1>Built as a queue-first assistant with memory, broker context, and guardrails.</h1>
+        <h1>Built as a deployed assistant with memory, broker context, and guardrails.</h1>
       </div>
       <div class="badge">Phase 1 stack</div>
     </div>
     <div class="content architecture">
       <div class="flow">
         <div class="flow-row"><strong>WhatsApp</strong><span>Meta Cloud API for inbound and outbound messages.</span></div>
-        <div class="flow-row"><strong>FastAPI</strong><span>Webhook verification, message parsing, and job enqueueing.</span></div>
-        <div class="flow-row"><strong>Redis + ARQ</strong><span>Background processing for LLM, broker, and alert jobs.</span></div>
+        <div class="flow-row"><strong>FastAPI</strong><span>Webhook verification, message parsing, legal pages, and Zerodha callback.</span></div>
+        <div class="flow-row"><strong>Render</strong><span>Single free web service using QUEUE_MODE=inline for the MVP demo.</span></div>
+        <div class="flow-row"><strong>cron-job.org</strong><span>Scheduled HTTP trigger checks saved alerts every few minutes.</span></div>
         <div class="flow-row"><strong>Supabase</strong><span>Postgres storage for users, memory, broker tokens, alerts, and audit events.</span></div>
-        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect for account linking, holdings, and portfolio sync.</span></div>
-        <div class="flow-row"><strong>LangChain + Ollama</strong><span>gpt-oss:120b-cloud for intent, chat, and summaries.</span></div>
+        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect login, holdings, and LTP prices.</span></div>
+        <div class="flow-row"><strong>LangChain + OpenRouter</strong><span>Improved prompts for intent, safe replies, and summaries.</span></div>
       </div>
       <div>
         <h2>Guardrail design</h2>
@@ -451,7 +452,7 @@
           </div>
           <div class="panel">
             <strong>Backend truth</strong>
-            <p>Portfolio facts come from Supabase and Zerodha, not memory guesses.</p>
+            <p>LLM receives cleaned context and never guesses holdings, prices, or broker status.</p>
           </div>
           <div class="panel">
             <strong>Paper trading</strong>
@@ -459,7 +460,7 @@
           </div>
           <div class="panel">
             <strong>Context memory</strong>
-            <p>Recent messages plus long summaries keep conversations coherent.</p>
+            <p>Recent messages plus durable summaries keep long conversations coherent.</p>
           </div>
         </div>
       </div>
@@ -483,7 +484,7 @@
         </div>
         <div class="panel">
           <strong>Primary use cases</strong>
-          <p>Portfolio summary, linked-account status, price alerts, name/profile memory, and paper-trade confirmation.</p>
+          <p>Consent onboarding, Zerodha connect, portfolio summary, scheduled price alerts, profile memory, and paper-trade confirmation.</p>
         </div>
         <div class="panel">
           <strong>Why now</strong>
@@ -494,17 +495,17 @@
         <div class="panel">
           <strong>Phase 1 deliverables completed</strong>
           <ul>
-            <li>Working MVP demo on WhatsApp.</li>
-            <li>Zerodha account linking and portfolio sync.</li>
-            <li>Clear product journey and technical stack.</li>
+            <li>Deployed WhatsApp bot on Render.</li>
+            <li>Consent flow and Zerodha connect link working.</li>
+            <li>Alert creation plus scheduled checker configured.</li>
           </ul>
         </div>
         <div class="panel">
           <strong>Next build milestones</strong>
           <ul>
-            <li>Production deployment instead of ngrok.</li>
-            <li>User-facing Zerodha connect link in chat.</li>
-            <li>Richer alert UX and portfolio insights.</li>
+            <li>Optional slash commands for safer user control.</li>
+            <li>Richer portfolio insights and alert UX.</li>
+            <li>Real WhatsApp Business number after prototype validation.</li>
           </ul>
         </div>
       </div>

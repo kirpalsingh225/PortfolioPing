@@ -25,8 +25,9 @@ User asks: set alert for INFY above 1600
 - Generates Zerodha Kite Connect login links for each WhatsApp user.
 - Stores broker access tokens in encrypted form.
 - Uses LangChain with OpenRouter for chatbot replies.
-- Maintains chat context using raw recent messages plus summarized conversation memory.
+- Maintains chat context using cleaned backend state, raw recent messages, and summarized conversation memory.
 - Supports portfolio questions, stock price questions, alert creation/cancellation, and basic profile memory.
+- Supports scheduled alert checking through an external cron trigger in the free Render deployment.
 - Provides privacy and terms pages.
 - Supports paper-trade style buy/sell confirmation, but does not place real trades.
 
@@ -40,6 +41,7 @@ User asks: set alert for INFY above 1600
 - LangChain
 - OpenRouter
 - Render
+- cron-job.org or external scheduler for periodic alert checks
 - Redis/ARQ support for production worker mode
 
 ## Project Structure
@@ -51,7 +53,7 @@ config.py               Environment-based settings
 schemas.py              Pydantic request/response models
 services/whatsapp.py    WhatsApp message extraction and sending
 services/chatbot.py     Main chatbot orchestration and user flows
-services/llm.py         LangChain/OpenRouter integration
+services/llm.py         LangChain/OpenRouter prompts, intent classification, summaries
 services/broker.py      Portfolio and market-data logic
 services/zerodha_auth.py Zerodha login/callback helpers
 services/supabase_db.py Supabase data access
@@ -179,6 +181,24 @@ Expected response:
 {"status":"ok","app_env":"production"}
 ```
 
+## Alert Checking
+
+In the free Render deployment, the app uses `QUEUE_MODE=inline`, so ARQ cron jobs do not run automatically.
+
+To check alerts periodically, use an external scheduler such as cron-job.org and call:
+
+```text
+POST https://your-render-service.onrender.com/jobs/check-alerts?api_secret=YOUR_API_SECRET
+```
+
+Recommended MVP schedule:
+
+```text
+Every 5-10 minutes
+```
+
+This checks enabled alerts against Zerodha LTP prices and sends a WhatsApp alert when the condition is met.
+
 ## WhatsApp Setup
 
 In Meta Developers, configure the webhook:
@@ -211,7 +231,7 @@ This is a hackathon MVP, not a regulated financial advisory product.
 - Users must opt in before portfolio features.
 - Broker tokens are encrypted before storage.
 - WhatsApp webhook signatures are verified in production.
-- Periodic alert checking requires either ARQ worker mode or an external scheduler.
+- Periodic alert checking is handled by an external scheduler in free Render mode, or by ARQ cron jobs in worker mode.
 
 ## Current Status
 
@@ -221,8 +241,8 @@ The production demo flow is working:
 WhatsApp message
 → Render webhook
 → Supabase-backed user flow
-→ chatbot response
+→ cleaned backend context + chatbot response
 → WhatsApp reply
 ```
 
-The MVP is ready for hackathon Phase 1 demo and can be extended later with a paid worker, scheduled alert delivery, and a real WhatsApp Business number.
+The MVP is ready for hackathon Phase 1 demo and can be extended later with slash commands, a paid worker, richer portfolio insights, and a real WhatsApp Business number.
