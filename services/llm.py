@@ -139,6 +139,10 @@ Reply rules:
 
 
 async def generate_web_search_reply(text: str, summary: str, recent_messages: list[dict], search_context: dict) -> str:
+    market_movers_reply = _maybe_market_movers_reply(text, search_context)
+    if market_movers_reply:
+        return market_movers_reply
+
     llm = get_llm()
     history = "\n".join(f"{m['role']}: {m['content']}" for m in recent_messages)
     prompt = f"""
@@ -161,12 +165,48 @@ Rules:
 - If search is disabled, missing, failed, or has zero results, say web search is unavailable right now.
 - If results exist but do not fully answer the question, give the useful partial answer from sources and clearly say what is missing.
 - Do not invent facts beyond the provided search snippets.
+- Only mention source names and URLs that are present in the web search context. Copy URLs exactly.
+- Do not add extra links from memory or general knowledge.
 - If the user asks for stock recommendations, do not tell them what to buy or sell. Summarize public context and suggest factors to evaluate.
 - For "top gainers", "top losers", or "market movers" queries, summarize only what the provided sources say. If the snippets do not contain a complete ranked list, share the source links and tell the user to open them for the live table.
+- If a search result date is unclear or older than the user's wording like "today", say the live table should be checked from the linked source.
 - Keep it readable on WhatsApp.
 """
     response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
     return response.content if isinstance(response.content, str) else str(response.content)
+
+
+def _maybe_market_movers_reply(text: str, search_context: dict) -> str | None:
+    query_text = f"{text} {search_context.get('optimized_query') or ''}".lower()
+    has_market = any(word in query_text for word in ["stock", "stocks", "share", "shares", "market", "nse", "bse", "indian"])
+    has_mover = any(phrase in query_text for phrase in ["top gain", "top-gain", "gainer", "loser", "mover", "most active"])
+    if not (has_market and has_mover):
+        return None
+
+    if search_context.get("status") != "ok" or not search_context.get("results"):
+        return "I’m not able to fetch live market-mover sources right now. Please try again in a bit."
+
+    lines = [
+        "I found live market-mover sources for Indian stocks.",
+    ]
+    answer = (search_context.get("answer") or "").strip()
+    if answer:
+        lines.extend(["", f"Search summary: {answer[:500]}"])
+
+    lines.extend(["", "Open these for the live ranked table:"])
+    for item in search_context.get("results", [])[:5]:
+        title = item.get("title") or "Source"
+        url = item.get("url")
+        if url:
+            lines.append(f"- {title}: {url}")
+
+    lines.extend(
+        [
+            "",
+            "These lists can change during market hours. This is informational only, not investment advice.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 async def summarize_conversation(existing_summary: str, recent_messages: list[dict]) -> str:
