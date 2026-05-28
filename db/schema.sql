@@ -85,6 +85,18 @@ create table if not exists alerts (
 
 create index if not exists alerts_enabled_idx on alerts (enabled, symbol, exchange);
 
+create table if not exists watchlist_items (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references users(id) on delete cascade,
+    symbol text not null,
+    exchange text not null default 'NSE',
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    unique (user_id, symbol, exchange)
+);
+
+create index if not exists watchlist_items_user_idx on watchlist_items (user_id, created_at desc);
+
 create table if not exists paper_orders (
     id uuid primary key default gen_random_uuid(),
     user_id uuid not null references users(id) on delete cascade,
@@ -114,5 +126,6 @@ alter table chat_messages enable row level security;
 alter table chat_summaries enable row level security;
 alter table pending_actions enable row level security;
 alter table alerts enable row level security;
+alter table watchlist_items enable row level security;
 alter table paper_orders enable row level security;
 alter table audit_events enable row level security;

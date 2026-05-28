@@ -1,3 +1,5 @@
+import re
+
 from config import get_settings
 from schemas import PaperOrderDraft, WhatsAppIncomingMessage
 from services.alerts import cancel_price_alerts, create_price_alert
@@ -7,11 +9,14 @@ from services.memory import load_memory, maybe_summarize, thread_id_for_phone
 from services.orders import create_paper_order
 from services.supabase_db import (
     accept_user_onboarding,
+    add_watchlist_item,
     clear_pending_action,
     create_audit_event,
     get_active_broker_account,
     get_user_profile,
     get_pending_action,
+    list_watchlist_items,
+    remove_watchlist_item,
     save_chat_message,
     save_pending_action,
     update_user_name,
@@ -47,6 +52,13 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
     if command_reply:
         await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=command_reply)
         await send_whatsapp_text(message.from_phone, command_reply)
+        await maybe_summarize(thread_id, user_id)
+        return
+
+    watchlist_reply = await _maybe_handle_watchlist(user_id, message.text)
+    if watchlist_reply:
+        await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=watchlist_reply)
+        await send_whatsapp_text(message.from_phone, watchlist_reply)
         await maybe_summarize(thread_id, user_id)
         return
 
@@ -119,6 +131,7 @@ async def _build_backend_context(user_id: str, intent, text: str) -> dict:
             "show_portfolio_if_connected",
             "fetch_stock_price_if_connected",
             "create_or_cancel_price_alert",
+            "add_remove_or_show_watchlist_items",
             "simulate_paper_trade_with_confirmation",
             "search_web_for_current_public_information",
         ],
@@ -220,6 +233,127 @@ async def _maybe_handle_command(user_id: str, thread_id: str, text: str) -> str 
             "Use this when your Zerodha session expires or you want to reconnect."
         )
 
+    return None
+
+
+async def _maybe_handle_watchlist(user_id: str, text: str) -> str | None:
+    normalized = text.strip().lower()
+    mentions_watchlist = "watchlist" in normalized or "watch list" in normalized
+
+    if normalized in {"/watchlist", "show watchlist", "my watchlist", "watchlist"}:
+        return await _format_watchlist(user_id)
+
+    if normalized.startswith("/watch "):
+        symbol = _extract_symbol(text)
+        if not symbol:
+            return "Send it like: /watch TCS"
+        return await _add_watchlist_symbol(user_id, symbol, _extract_exchange(text))
+
+    if normalized.startswith("/unwatch "):
+        symbol = _extract_symbol(text)
+        if not symbol:
+            return "Send it like: /unwatch TCS"
+        return await _remove_watchlist_symbol(user_id, symbol, _extract_exchange(text))
+
+    if not mentions_watchlist:
+        return None
+
+    if any(word in normalized for word in ["add", "save", "put", "track"]):
+        symbol = _extract_symbol(text)
+        if not symbol:
+            return "Which stock should I add to your watchlist? Send it like: add TCS to watchlist."
+        return await _add_watchlist_symbol(user_id, symbol, _extract_exchange(text))
+
+    if any(word in normalized for word in ["remove", "delete", "unwatch"]):
+        symbol = _extract_symbol(text)
+        if not symbol:
+            return "Which stock should I remove from your watchlist? Send it like: remove TCS from watchlist."
+        return await _remove_watchlist_symbol(user_id, symbol, _extract_exchange(text))
+
+    if any(word in normalized for word in ["what", "show", "list", "which", "all", "stocks"]):
+        return await _format_watchlist(user_id)
+
+    return None
+
+
+async def _add_watchlist_symbol(user_id: str, symbol: str, exchange: str) -> str:
+    try:
+        item = await add_watchlist_item(user_id, symbol, exchange)
+    except Exception:
+        return _watchlist_setup_message()
+    return f"Added {item['exchange']}:{item['symbol']} to your watchlist."
+
+
+async def _remove_watchlist_symbol(user_id: str, symbol: str, exchange: str) -> str:
+    try:
+        count = await remove_watchlist_item(user_id, symbol, exchange)
+    except Exception:
+        return _watchlist_setup_message()
+    if count:
+        return f"Removed {exchange}:{symbol.upper()} from your watchlist."
+    return f"I couldn’t find {exchange}:{symbol.upper()} in your watchlist."
+
+
+async def _format_watchlist(user_id: str) -> str:
+    try:
+        items = await list_watchlist_items(user_id)
+    except Exception:
+        return _watchlist_setup_message()
+    if not items:
+        return "Your watchlist is empty. Add one like: add TCS to watchlist."
+
+    lines = ["Your watchlist:"]
+    for item in items:
+        lines.append(f"- {item['exchange']}:{item['symbol']}")
+    return "\n".join(lines)
+
+
+def _watchlist_setup_message() -> str:
+    return "Watchlist storage is not set up yet. Run the latest db/schema.sql in Supabase, then try again."
+
+
+def _extract_exchange(text: str) -> str:
+    return "BSE" if re.search(r"\bbse\b", text, flags=re.IGNORECASE) else "NSE"
+
+
+def _extract_symbol(text: str) -> str | None:
+    stopwords = {
+        "A",
+        "ADD",
+        "ALL",
+        "AN",
+        "BSE",
+        "CAN",
+        "DELETE",
+        "FROM",
+        "IN",
+        "INTO",
+        "LIST",
+        "ME",
+        "MY",
+        "NSE",
+        "ON",
+        "PLEASE",
+        "PUT",
+        "REMOVE",
+        "SAVE",
+        "SHOW",
+        "STOCK",
+        "STOCKS",
+        "THE",
+        "TO",
+        "TRACK",
+        "UNWATCH",
+        "WATCH",
+        "WATCHLIST",
+        "WHAT",
+        "WHICH",
+    }
+    for token in re.findall(r"[A-Za-z][A-Za-z0-9&.-]{0,14}", text):
+        symbol = token.strip(".-").upper()
+        if len(symbol) < 2 or symbol in stopwords:
+            continue
+        return symbol
     return None
 
 

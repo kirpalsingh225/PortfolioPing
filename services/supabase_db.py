@@ -190,3 +190,42 @@ async def clear_pending_action(thread_id: str, action_type: str, status: str) ->
     db.table("pending_actions").update({"status": status}).eq("thread_id", thread_id).eq(
         "action_type", action_type
     ).eq("status", "pending").execute()
+
+
+async def add_watchlist_item(user_id: str, symbol: str, exchange: str = "NSE") -> dict[str, Any]:
+    db = get_supabase()
+    payload = {
+        "user_id": user_id,
+        "symbol": symbol.upper(),
+        "exchange": exchange.upper(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    result = db.table("watchlist_items").upsert(payload, on_conflict="user_id,symbol,exchange").execute()
+    item = result.data[0]
+    await create_audit_event(user_id, "watchlist_item_added", {"symbol": item["symbol"], "exchange": item["exchange"]})
+    return item
+
+
+async def remove_watchlist_item(user_id: str, symbol: str | None = None, exchange: str | None = None) -> int:
+    db = get_supabase()
+    query = db.table("watchlist_items").delete().eq("user_id", user_id)
+    if symbol:
+        query = query.eq("symbol", symbol.upper())
+    if exchange:
+        query = query.eq("exchange", exchange.upper())
+    result = query.execute()
+    count = len(result.data or [])
+    await create_audit_event(user_id, "watchlist_item_removed", {"symbol": symbol, "exchange": exchange, "count": count})
+    return count
+
+
+async def list_watchlist_items(user_id: str) -> list[dict[str, Any]]:
+    db = get_supabase()
+    result = (
+        db.table("watchlist_items")
+        .select("symbol, exchange, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+    return result.data or []

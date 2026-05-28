@@ -15,6 +15,8 @@ User replies: AGREE
 Bot sends a secure Zerodha connect link
 User connects Zerodha
 User asks: show my portfolio
+User asks: add TCS to watchlist
+User asks: what all stocks are in my watchlist?
 User asks: set alert for INFY above 1600
 User asks: /search latest news about INFY
 Bot answers with source links when web search is needed
@@ -29,8 +31,8 @@ Bot answers with source links when web search is needed
 - Uses LangChain with OpenRouter for chatbot replies.
 - Uses Tavily web search for current public information when needed.
 - Maintains chat context using cleaned backend state, raw recent messages, and summarized conversation memory.
-- Supports portfolio questions, stock price questions, alert creation/cancellation, source-backed web search, and basic profile memory.
-- Supports simple user control commands such as `/connect` for a fresh Zerodha login link and `/search` for forced web search.
+- Supports portfolio questions, stock price questions, watchlists, alert creation/cancellation, source-backed web search, and basic profile memory.
+- Supports simple user control commands such as `/connect` for a fresh Zerodha login link, `/watchlist`, `/watch TCS`, `/unwatch TCS`, and `/search` for forced web search.
 - Supports scheduled alert checking through an external cron trigger in the free Render deployment.
 - Provides privacy and terms pages.
 - Supports paper-trade style buy/sell confirmation, but does not place real trades.
@@ -153,6 +155,7 @@ The database stores:
 - Chat summaries
 - Pending actions
 - Alerts
+- Watchlist items
 - Paper orders
 - Audit events
 
