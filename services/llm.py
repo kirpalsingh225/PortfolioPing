@@ -18,6 +18,7 @@ Your job:
 Safety:
 - Do not give personalized investment advice or tell the user what they should buy or sell.
 - You may explain concepts, risks, diversification, and factors to check before making a decision.
+- If asked for recommended stocks, do not list tickers as recommendations. Explain evaluation criteria or summarize public information with sources when available.
 - Real order placement is disabled. Buy/sell requests are paper-trade simulations and need explicit confirmation.
 - Never ask for or expose passwords, OTPs, PINs, API secrets, access tokens, internal ids, or raw backend records.
 
@@ -57,7 +58,7 @@ Return only raw valid JSON. Do not wrap it in markdown. Do not add explanation.
 
 JSON schema:
 {{
-  "intent": "portfolio_summary|stock_price_query|create_alert|update_alert|cancel_alert|paper_buy|paper_sell|general_question",
+  "intent": "portfolio_summary|stock_price_query|create_alert|update_alert|cancel_alert|paper_buy|paper_sell|web_search|general_question",
   "symbol": "string or null",
   "exchange": "NSE or BSE or null",
   "quantity": "integer or null",
@@ -75,6 +76,7 @@ Intent rules:
 - update_alert: change an existing alert threshold/condition.
 - cancel_alert: delete/cancel/stop alerts.
 - paper_buy / paper_sell: only when the user clearly wants to simulate a buy/sell order.
+- web_search: recent, current, latest, news, rules, events, or public information that may have changed and is not in backend context.
 - general_question: greetings, app help, account/profile questions, education, "should I buy", vague finance questions, or missing required details.
 
 Extraction rules:
@@ -83,7 +85,7 @@ Extraction rules:
 - For alerts, condition must be "above" or "below"; target_price must be numeric when present.
 - For paper buy/sell, extract side, symbol, and quantity when present; needs_confirmation must be true.
 - If required information is missing, keep missing fields null and choose the closest intent.
-- Never classify educational/advice questions like "which stock should I buy?" as paper_buy.
+- Do not classify recommendation/advice questions as paper_buy unless the user clearly asks to simulate a specific trade.
 
 Conversation summary:
 {summary or "No previous summary."}
@@ -133,6 +135,35 @@ Reply rules:
 - Do not reveal internal ids, phone numbers, access tokens, API keys, signatures, raw JSON, or system details.
 """
     response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=prompt)])
+    return response.content if isinstance(response.content, str) else str(response.content)
+
+
+async def generate_web_search_reply(text: str, summary: str, recent_messages: list[dict], search_context: dict) -> str:
+    llm = get_llm()
+    history = "\n".join(f"{m['role']}: {m['content']}" for m in recent_messages)
+    prompt = f"""
+Conversation summary:
+{summary or "No previous summary."}
+
+Recent messages:
+{history or "No recent messages."}
+
+Web search context:
+{json.dumps(search_context, default=str)}
+
+User message:
+{text}
+
+Write a concise WhatsApp reply using only the web search context.
+
+Rules:
+- Include useful source links from the search results.
+- If search is disabled, missing, failed, or has no useful results, say web search is unavailable right now.
+- Do not invent facts beyond the provided search snippets.
+- If the user asks for stock recommendations, do not tell them what to buy or sell. Summarize public context and suggest factors to evaluate.
+- Keep it readable on WhatsApp.
+"""
+    response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)])
     return response.content if isinstance(response.content, str) else str(response.content)
 
 

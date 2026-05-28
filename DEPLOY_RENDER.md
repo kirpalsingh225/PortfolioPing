@@ -63,6 +63,7 @@ LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=<openrouter-key>
 OPENROUTER_MODEL=openai/gpt-oss-120b:free
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+TAVILY_API_KEY=<tavily-key>
 MAX_RAW_MESSAGES=10
 SUMMARY_TRIGGER_MESSAGES=18
 ```

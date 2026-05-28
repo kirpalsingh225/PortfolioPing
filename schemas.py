@@ -31,6 +31,7 @@ class ChatIntent(BaseModel):
         "cancel_alert",
         "paper_buy",
         "paper_sell",
+        "web_search",
         "general_question",
     ]
     symbol: str | None = None

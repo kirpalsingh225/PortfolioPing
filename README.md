@@ -25,6 +25,7 @@ User asks: set alert for INFY above 1600
 - Generates Zerodha Kite Connect login links for each WhatsApp user.
 - Stores broker access tokens in encrypted form.
 - Uses LangChain with OpenRouter for chatbot replies.
+- Uses Tavily web search for current public information when needed.
 - Maintains chat context using cleaned backend state, raw recent messages, and summarized conversation memory.
 - Supports portfolio questions, stock price questions, alert creation/cancellation, and basic profile memory.
 - Supports scheduled alert checking through an external cron trigger in the free Render deployment.
@@ -40,6 +41,7 @@ User asks: set alert for INFY above 1600
 - Supabase Postgres
 - LangChain
 - OpenRouter
+- Tavily
 - Render
 - cron-job.org or external scheduler for periodic alert checks
 - Redis/ARQ support for production worker mode
@@ -54,6 +56,7 @@ schemas.py              Pydantic request/response models
 services/whatsapp.py    WhatsApp message extraction and sending
 services/chatbot.py     Main chatbot orchestration and user flows
 services/llm.py         LangChain/OpenRouter prompts, intent classification, summaries
+services/web_search.py  Tavily search integration for current public information
 services/broker.py      Portfolio and market-data logic
 services/zerodha_auth.py Zerodha login/callback helpers
 services/supabase_db.py Supabase data access
@@ -92,6 +95,7 @@ LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=openai/gpt-oss-120b:free
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+TAVILY_API_KEY=...
 
 TOKEN_ENCRYPTION_KEY=...
 API_SECRET=...
@@ -198,6 +202,25 @@ Every 5-10 minutes
 ```
 
 This checks enabled alerts against Zerodha LTP prices and sends a WhatsApp alert when the condition is met.
+
+## Web Search
+
+The chatbot can use Tavily for recent/current public information that is not available from Supabase, Zerodha, or memory.
+
+Natural language examples:
+
+```text
+latest news about INFY
+what happened to TCS today
+```
+
+Forced search command:
+
+```text
+/search latest RBI update about markets
+```
+
+Search replies include source links and remain informational only, not investment advice.
 
 ## WhatsApp Setup
 

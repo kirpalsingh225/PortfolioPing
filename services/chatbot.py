@@ -2,7 +2,7 @@ from config import get_settings
 from schemas import PaperOrderDraft, WhatsAppIncomingMessage
 from services.alerts import cancel_price_alerts, create_price_alert
 from services.broker import get_current_price, get_portfolio_summary
-from services.llm import classify_intent, generate_reply
+from services.llm import classify_intent, generate_reply, generate_web_search_reply
 from services.memory import load_memory, maybe_summarize, thread_id_for_phone
 from services.orders import create_paper_order
 from services.supabase_db import (
@@ -17,6 +17,7 @@ from services.supabase_db import (
     update_user_name,
     upsert_user_by_phone,
 )
+from services.web_search import search_web
 from services.whatsapp import send_whatsapp_text
 from services.zerodha_auth import build_login_url
 
@@ -42,7 +43,7 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
         await maybe_summarize(thread_id, user_id)
         return
 
-    command_reply = await _maybe_handle_command(user_id, message.text)
+    command_reply = await _maybe_handle_command(user_id, thread_id, message.text)
     if command_reply:
         await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=command_reply)
         await send_whatsapp_text(message.from_phone, command_reply)
@@ -80,6 +81,15 @@ async def handle_whatsapp_message(message: WhatsAppIncomingMessage) -> None:
         await maybe_summarize(thread_id, user_id)
         return
 
+    if intent.intent == "web_search":
+        search_context = await search_web(message.text)
+        reply = await generate_web_search_reply(message.text, summary, recent_messages, search_context)
+        await save_chat_message(thread_id=thread_id, user_id=user_id, role="assistant", content=reply)
+        await send_whatsapp_text(message.from_phone, reply)
+        await create_audit_event(user_id, "web_search_answered", {"query": message.text, "status": search_context.get("status")})
+        await maybe_summarize(thread_id, user_id)
+        return
+
     context = await _build_backend_context(user_id, intent, message.text)
     reply = _deterministic_reply(intent, context)
     if reply is None:
@@ -110,6 +120,7 @@ async def _build_backend_context(user_id: str, intent, text: str) -> dict:
             "fetch_stock_price_if_connected",
             "create_or_cancel_price_alert",
             "simulate_paper_trade_with_confirmation",
+            "search_web_for_current_public_information",
         ],
         "important_limits": [
             "not_investment_advice",
@@ -189,8 +200,16 @@ async def _maybe_handle_onboarding(user_id: str, text: str) -> str | None:
     return None
 
 
-async def _maybe_handle_command(user_id: str, text: str) -> str | None:
+async def _maybe_handle_command(user_id: str, thread_id: str, text: str) -> str | None:
     normalized = text.strip().lower()
+    if normalized.startswith("/search"):
+        query = text.strip()[len("/search") :].strip()
+        if not query:
+            return "Send it like: /search latest news about INFY"
+        summary, recent_messages = await load_memory(thread_id)
+        search_context = await search_web(query)
+        return await generate_web_search_reply(query, summary, recent_messages, search_context)
+
     if normalized not in {"/connect", "/reconnect", "reconnect zerodha", "connect zerodha"}:
         return None
 
