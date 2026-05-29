@@ -354,6 +354,16 @@ def _deterministic_reply(intent, context: dict) -> str | None:
             f"{context.get('zerodha_connect_url')}"
         )
 
+    if portfolio.get("status") == "token_invalid":
+        return (
+            "Your Zerodha session has expired or become invalid, so I can’t fetch holdings or positions right now.\n\n"
+            "Reconnect securely here:\n"
+            f"{context.get('zerodha_connect_url')}"
+        )
+
+    if portfolio.get("status") == "error":
+        return portfolio.get("message") or "Could not fetch your Zerodha portfolio right now. Please try again later."
+
     holdings = portfolio.get("holdings") or []
     positions = portfolio.get("positions") or []
     day_positions = portfolio.get("day_positions") or []

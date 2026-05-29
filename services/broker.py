@@ -59,8 +59,17 @@ async def get_portfolio_summary(user_id: str) -> dict[str, Any]:
             holdings = await client.holdings()
             positions = await client.positions()
             return _summarize_portfolio(holdings, positions)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code in {401, 403}:
+                return {
+                    "status": "token_invalid",
+                    "message": "Zerodha session is expired or invalid. Please reconnect Zerodha.",
+                }
         except Exception:
-            pass
+            return {
+                "status": "error",
+                "message": "Could not fetch Zerodha portfolio right now. Please try again later.",
+            }
 
     result = (
         db.table("holdings_snapshots")
