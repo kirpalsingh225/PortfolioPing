@@ -355,15 +355,27 @@ def _deterministic_reply(intent, context: dict) -> str | None:
         )
 
     holdings = portfolio.get("holdings") or []
-    if not holdings:
-        return "Your Zerodha account is linked, but there are no holdings available in your portfolio right now."
+    positions = portfolio.get("positions") or []
+    day_positions = portfolio.get("day_positions") or []
+    if not holdings and not positions and not day_positions:
+        return "Your Zerodha account is linked, but there are no holdings or open positions available right now."
+
+    if not holdings and (positions or day_positions):
+        lines = ["No settled holdings yet, but I found Zerodha positions:"]
+        for item in (positions or day_positions)[:5]:
+            lines.append(
+                f"- {item.get('exchange')}:{item.get('symbol')} qty {item.get('quantity')} "
+                f"LTP {item.get('last_price')} P&L {item.get('pnl')}"
+            )
+        return "\n".join(lines)
 
     return (
         "Portfolio summary:\n"
         f"Invested: {portfolio.get('total_invested', 0)}\n"
         f"Current: {portfolio.get('total_current', 0)}\n"
         f"P&L: {portfolio.get('total_pnl', 0)}\n"
-        f"Holdings: {len(holdings)}"
+        f"Holdings: {len(holdings)}\n"
+        f"Open positions: {len(positions)}"
     )
 
 

@@ -23,6 +23,12 @@ class ZerodhaClient:
             response.raise_for_status()
             return response.json().get("data", [])
 
+    async def positions(self) -> dict[str, list[dict[str, Any]]]:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get("https://api.kite.trade/portfolio/positions", headers=self.headers)
+            response.raise_for_status()
+            return response.json().get("data", {"net": [], "day": []})
+
     async def ltp(self, instruments: list[str]) -> dict[str, Any]:
         params = [("i", item) for item in instruments]
         async with httpx.AsyncClient(timeout=20) as client:
@@ -37,6 +43,25 @@ class ZerodhaClient:
 
 async def get_portfolio_summary(user_id: str) -> dict[str, Any]:
     db = get_supabase()
+    account = (
+        db.table("broker_accounts")
+        .select("id, access_token_ciphertext")
+        .eq("user_id", user_id)
+        .eq("broker", "zerodha")
+        .eq("is_active", True)
+        .maybe_single()
+        .execute()
+    )
+    ciphertext = (account.data or {}).get("access_token_ciphertext")
+    if ciphertext:
+        try:
+            client = ZerodhaClient(decrypt_secret(ciphertext))
+            holdings = await client.holdings()
+            positions = await client.positions()
+            return _summarize_portfolio(holdings, positions)
+        except Exception:
+            pass
+
     result = (
         db.table("holdings_snapshots")
         .select("*")
@@ -81,7 +106,8 @@ async def sync_portfolio_snapshots() -> None:
         token = decrypt_secret(ciphertext)
         client = ZerodhaClient(token)
         holdings = await client.holdings()
-        summary = _summarize_holdings(holdings)
+        positions = await client.positions()
+        summary = _summarize_portfolio(holdings, positions)
         db.table("holdings_snapshots").insert(
             {
                 "user_id": account["user_id"],
@@ -92,10 +118,10 @@ async def sync_portfolio_snapshots() -> None:
         ).execute()
 
 
-def _summarize_holdings(holdings: list[dict[str, Any]]) -> dict[str, Any]:
+def _summarize_portfolio(holdings: list[dict[str, Any]], positions: dict[str, list[dict[str, Any]]] | None = None) -> dict[str, Any]:
     total_invested = 0.0
     total_current = 0.0
-    rows = []
+    holding_rows = []
 
     for item in holdings:
         quantity = float(item.get("quantity") or 0)
@@ -105,7 +131,7 @@ def _summarize_holdings(holdings: list[dict[str, Any]]) -> dict[str, Any]:
         current = quantity * last_price
         total_invested += invested
         total_current += current
-        rows.append(
+        holding_rows.append(
             {
                 "symbol": item.get("tradingsymbol"),
                 "exchange": item.get("exchange"),
@@ -116,10 +142,44 @@ def _summarize_holdings(holdings: list[dict[str, Any]]) -> dict[str, Any]:
             }
         )
 
+    net_positions = _summarize_positions((positions or {}).get("net") or [], include_closed=False)
+    day_positions = _summarize_positions((positions or {}).get("day") or [], include_closed=True)
+    total_position_pnl = sum(float(item.get("pnl") or 0) for item in net_positions)
+
     return {
         "broker": "zerodha",
         "total_invested": total_invested,
         "total_current": total_current,
         "total_pnl": total_current - total_invested,
-        "holdings": rows,
+        "total_position_pnl": total_position_pnl,
+        "holdings": holding_rows,
+        "positions": net_positions,
+        "day_positions": day_positions,
     }
+
+
+def _summarize_positions(positions: list[dict[str, Any]], include_closed: bool) -> list[dict[str, Any]]:
+    rows = []
+    for item in positions:
+        quantity = float(item.get("quantity") or 0)
+        day_buy_quantity = float(item.get("day_buy_quantity") or item.get("buy_quantity") or 0)
+        day_sell_quantity = float(item.get("day_sell_quantity") or item.get("sell_quantity") or 0)
+        if not include_closed and quantity == 0:
+            continue
+        if include_closed and quantity == 0 and day_buy_quantity == 0 and day_sell_quantity == 0:
+            continue
+
+        rows.append(
+            {
+                "symbol": item.get("tradingsymbol"),
+                "exchange": item.get("exchange"),
+                "product": item.get("product"),
+                "quantity": quantity,
+                "average_price": float(item.get("average_price") or 0),
+                "last_price": float(item.get("last_price") or 0),
+                "pnl": float(item.get("pnl") or 0),
+                "day_buy_quantity": day_buy_quantity,
+                "day_sell_quantity": day_sell_quantity,
+            }
+        )
+    return rows

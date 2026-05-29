@@ -2,7 +2,7 @@
 
 ## WhatsApp Stock Portfolio Assistant
 
-PortfolioPing is a WhatsApp-based stock portfolio assistant built for the OpenAI x Outskill Hackathon. It lets a user chat with a WhatsApp bot, opt in, connect Zerodha through the official Kite login flow, ask portfolio-related questions, manage a watchlist, and create stock price alerts.
+PortfolioPing is a WhatsApp-based stock portfolio assistant built for the OpenAI x Outskill Hackathon. It lets a user chat with a WhatsApp bot, opt in, connect Zerodha through the official Kite login flow, ask portfolio-related questions, view holdings/positions, manage a watchlist, and create stock price alerts.
 
 The current version is a working MVP/prototype. It is deployed on Render and uses a single web service for the hackathon demo.
 
@@ -35,7 +35,7 @@ Bot answers with source links when web search is needed
 - Uses LangChain with OpenRouter for chatbot replies.
 - Uses Tavily web search for current public information when needed.
 - Maintains chat context using cleaned backend state, raw recent messages, and summarized conversation memory.
-- Supports portfolio questions, stock price questions, watchlists, alert creation/cancellation, source-backed web search, and basic profile memory.
+- Supports portfolio questions, holdings/positions summaries, stock price questions, watchlists, alert creation/cancellation, source-backed web search, and basic profile memory.
 - Supports simple user control commands such as `/connect` for a fresh Zerodha login link, `/watchlist`, `/watch TCS`, `/unwatch TCS`, and `/search` for forced web search.
 - Supports scheduled alert checking through an external cron trigger in the free Render deployment.
 - Provides privacy and terms pages.
