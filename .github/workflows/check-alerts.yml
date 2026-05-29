@@ -1,0 +1,31 @@
+name: Check Price Alerts
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-alerts:
+    runs-on: ubuntu-latest
+    env:
+      APP_BASE_URL: https://stock-portfolio-whatsapp-api.onrender.com
+      ALERT_JOB_API_SECRET: ${{ secrets.ALERT_JOB_API_SECRET }}
+
+    steps:
+      - name: Validate required secret
+        run: |
+          if [ -z "$ALERT_JOB_API_SECRET" ]; then
+            echo "Missing GitHub secret: ALERT_JOB_API_SECRET"
+            exit 1
+          fi
+
+      - name: Check Render health
+        run: |
+          curl --fail --show-error --silent "$APP_BASE_URL/health"
+
+      - name: Trigger alert check
+        run: |
+          curl --fail --show-error --silent \
+            --request POST \
+            "$APP_BASE_URL/jobs/check-alerts?api_secret=$ALERT_JOB_API_SECRET"

@@ -199,7 +199,7 @@ Expected response:
 
 In the free Render deployment, the app uses `QUEUE_MODE=inline`, so ARQ cron jobs do not run automatically.
 
-To check alerts periodically, use an external scheduler such as cron-job.org and call:
+To check alerts periodically, use GitHub Actions or an external scheduler such as cron-job.org and call:
 
 ```text
 POST https://your-render-service.onrender.com/jobs/check-alerts?api_secret=YOUR_API_SECRET
@@ -212,6 +212,22 @@ Every 5-10 minutes
 ```
 
 This path is wired for scheduled checks. Live alert delivery requires Zerodha quote/LTP permission for the connected Kite app. Without that permission, alerts remain saved in Supabase but cannot be triggered from Zerodha live prices.
+
+### GitHub Actions Cron
+
+This repo includes:
+
+```text
+.github/workflows/check-alerts.yml
+```
+
+Add this GitHub repository secret:
+
+```text
+ALERT_JOB_API_SECRET=your API_SECRET value from Render
+```
+
+The workflow runs every 10 minutes and can also be triggered manually from the GitHub Actions tab. It first checks `/health`, then calls `/jobs/check-alerts`.
 
 ## Web Search
 
