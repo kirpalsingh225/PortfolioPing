@@ -101,8 +101,42 @@ async def get_current_price(user_id: str, symbol: str, exchange: str = "NSE") ->
 
     instrument = f"{exchange}:{symbol.upper()}"
     client = ZerodhaClient(decrypt_secret(ciphertext))
-    data = await client.ltp([instrument])
-    return {"status": "ok", "instrument": instrument, "price": data.get(instrument, {}).get("last_price")}
+    try:
+        data = await client.ltp([instrument])
+    except httpx.HTTPStatusError as exc:
+        error_text = exc.response.text.lower()
+        if exc.response.status_code in {401, 403} and "token" in error_text:
+            return {
+                "status": "token_invalid",
+                "instrument": instrument,
+                "message": "Zerodha session is expired or invalid. Please reconnect Zerodha.",
+            }
+        if exc.response.status_code == 403:
+            return {
+                "status": "permission_denied",
+                "instrument": instrument,
+                "message": "Zerodha quote/LTP permission is not enabled for this app.",
+            }
+        return {
+            "status": "error",
+            "instrument": instrument,
+            "message": "Could not fetch this price from Zerodha right now.",
+        }
+    except Exception:
+        return {
+            "status": "error",
+            "instrument": instrument,
+            "message": "Could not fetch this price from Zerodha right now.",
+        }
+
+    price = data.get(instrument, {}).get("last_price")
+    if price is None:
+        return {
+            "status": "not_found",
+            "instrument": instrument,
+            "message": "Zerodha did not return a price for this instrument.",
+        }
+    return {"status": "ok", "instrument": instrument, "price": price}
 
 
 async def sync_portfolio_snapshots() -> None:

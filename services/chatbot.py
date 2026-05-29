@@ -343,6 +343,9 @@ def _deterministic_reply(intent, context: dict) -> str | None:
     if intent.intent == "general_question":
         return _maybe_user_profile_reply(context)
 
+    if intent.intent == "stock_price_query":
+        return _price_reply(context)
+
     if intent.intent != "portfolio_summary":
         return None
 
@@ -387,6 +390,43 @@ def _deterministic_reply(intent, context: dict) -> str | None:
         f"Holdings: {len(holdings)}\n"
         f"Open positions: {len(positions)}"
     )
+
+
+def _price_reply(context: dict) -> str | None:
+    price = context.get("price") or {}
+    status = price.get("status")
+    instrument = price.get("instrument") or "that instrument"
+
+    if status == "ok":
+        return f"{instrument} current price: {price.get('price')}."
+
+    if status == "not_connected":
+        return (
+            "Your Zerodha account is not linked yet, so I can’t fetch live prices.\n\n"
+            "Connect it securely here:\n"
+            f"{context.get('zerodha_connect_url')}"
+        )
+
+    if status == "token_invalid":
+        return (
+            "Your Zerodha session has expired or become invalid, so I can’t fetch live prices right now.\n\n"
+            "Reconnect securely here:\n"
+            f"{context.get('zerodha_connect_url')}"
+        )
+
+    if status == "permission_denied":
+        return (
+            f"I couldn’t fetch {instrument} from Zerodha because quote/LTP permission is not enabled for this app.\n\n"
+            "You can still use /search for public market info, but live Zerodha prices need quote permission."
+        )
+
+    if status == "not_found":
+        return f"I couldn’t find a Zerodha LTP price for {instrument}. Check the symbol/exchange and try again."
+
+    if status == "error":
+        return price.get("message") or f"Could not fetch the price for {instrument} right now."
+
+    return None
 
 
 def _maybe_user_profile_reply(context: dict) -> str | None:
