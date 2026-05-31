@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Phase 1 Pitch Deck - WhatsApp Portfolio Assistant</title>
+  <title>PortfolioPing Final Pitch Deck</title>
   <style>
     @page {
       size: 16in 9in;
@@ -84,7 +84,7 @@
       font-size: 58px;
       line-height: 1.02;
       letter-spacing: 0;
-      max-width: 930px;
+      max-width: 1010px;
     }
 
     h2 {
@@ -218,7 +218,7 @@
     }
 
     .bubble {
-      max-width: 82%;
+      max-width: 86%;
       padding: 16px 18px;
       border-radius: 8px;
       margin: 16px 0;
@@ -270,24 +270,6 @@
       color: var(--muted);
     }
 
-    .stack {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    .chip {
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 8px;
-      padding: 16px 18px;
-      font-size: 18px;
-      color: var(--slate);
-      min-height: 58px;
-      display: flex;
-      align-items: center;
-    }
-
     .metric-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -315,10 +297,6 @@
       line-height: 1.25;
     }
 
-    .accent {
-      color: var(--blue);
-    }
-
     .callout {
       margin-top: 26px;
       background: #fff9e8;
@@ -328,6 +306,43 @@
       color: #5d4713;
       font-size: 20px;
       line-height: 1.35;
+    }
+
+    .flow.compact {
+      gap: 10px;
+    }
+
+    .flow.compact .flow-row {
+      grid-template-columns: 160px 1fr;
+      gap: 14px;
+      padding: 12px 16px;
+    }
+
+    .flow.compact .flow-row strong {
+      font-size: 17px;
+    }
+
+    .flow.compact .flow-row span {
+      font-size: 15px;
+    }
+
+    .compact-panels {
+      gap: 12px;
+    }
+
+    .compact-panels .panel {
+      min-height: 142px;
+      padding: 18px;
+    }
+
+    .compact-panels .panel strong {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .compact-panels .panel p {
+      font-size: 17px;
+      line-height: 1.28;
     }
 
     @media print {
@@ -349,168 +364,168 @@
   <section class="slide">
     <div class="header">
       <div>
-        <div class="eyebrow">Problem</div>
-        <h1>Retail investors need portfolio updates where they already chat.</h1>
+        <div class="eyebrow">Problem and Usefulness</div>
+        <h1>Portfolio tracking should not require learning a complex dashboard.</h1>
       </div>
-      <div class="badge">OpenAI x Outskill Hackathon - Phase 1</div>
+      <div class="badge">PortfolioPing · AI Builders Hackathon</div>
     </div>
     <div class="content">
       <div class="grid-2">
         <div>
-          <h2>Current pain points</h2>
+          <h2>Investing apps can overwhelm new users</h2>
           <ul>
-            <li>Portfolio checks require opening broker apps repeatedly.</li>
-            <li>Price alerts and summaries are scattered across apps.</li>
-            <li>New investors want guidance without accidental real trades.</li>
-            <li>Long conversations lose context across sessions.</li>
+            <li>Holdings, positions, watchlists, alerts, and news live across different screens.</li>
+            <li>Charts, tabs, and financial terms create friction for beginner and non-technical investors.</li>
+            <li>Simple checks often require repeatedly opening broker apps and navigating dashboards.</li>
+            <li>Users want quick answers without receiving risky investment advice or placing accidental trades.</li>
           </ul>
-          <div class="callout">Phase 1 goal: prove a WhatsApp-first assistant can connect messaging, broker data, memory, and safe workflows.</div>
+          <div class="callout"><strong>Value proposition:</strong> from complex dashboards to simple conversations on WhatsApp.</div>
         </div>
         <div class="phone-demo">
-          <div class="bubble user">hi</div>
-          <div class="bubble bot">Welcome. Please review Privacy and Terms, then reply AGREE to continue.</div>
-          <div class="bubble user">AGREE</div>
-          <div class="bubble bot">Thanks. Next, connect Zerodha securely through the official login link.</div>
-          <div class="bubble user">/search latest news about INFY</div>
-          <div class="bubble bot">Here are recent sources I found. This is informational only, not investment advice.</div>
+          <div class="bubble user">Show my portfolio</div>
+          <div class="bubble bot">Portfolio summary: holdings, positions, invested value, current value, and P&amp;L.</div>
+          <div class="bubble user">Add BANKNIFTY to my watchlist</div>
+          <div class="bubble bot">Added NSE:BANKNIFTY to your watchlist.</div>
+          <div class="bubble user">Set an alert for it above 50000</div>
+          <div class="bubble bot">Alert created for NSE:BANKNIFTY above 50000.</div>
         </div>
       </div>
     </div>
-    <div class="footer"><span>Portfolio Assistant</span><span>1 / 4</span></div>
+    <div class="footer"><span>PortfolioPing · Problem</span><span>1 / 4</span></div>
   </section>
 
   <section class="slide">
     <div class="header">
       <div>
         <div class="eyebrow">Solution</div>
-        <h1>A WhatsApp bot that connects to Zerodha and manages portfolio conversations.</h1>
+        <h1>PortfolioPing turns WhatsApp into a conversational portfolio companion.</h1>
       </div>
-      <div class="badge">MVP deployed on Render</div>
+      <div class="badge">Working MVP deployed on Render</div>
     </div>
     <div class="content">
       <div class="journey">
         <div class="step">
           <div class="num">1</div>
-          <strong>User messages bot</strong>
-          <span>WhatsApp Cloud API receives text from the user.</span>
+          <strong>Message naturally</strong>
+          <span>User sends a normal WhatsApp message instead of navigating a finance UI.</span>
         </div>
         <div class="step">
           <div class="num">2</div>
-          <strong>Backend processes</strong>
-          <span>FastAPI handles the webhook with inline background tasks for the free demo.</span>
+          <strong>Consent and connect</strong>
+          <span>Bot records opt-in and shares the official secure Zerodha login flow.</span>
         </div>
         <div class="step">
           <div class="num">3</div>
-          <strong>Context layer</strong>
-          <span>Bot loads user profile, consent, broker state, memory, and intent.</span>
+          <strong>Understand context</strong>
+          <span>LLM intent plus six recent messages resolves follow-ups such as “for it”.</span>
         </div>
         <div class="step">
           <div class="num">4</div>
-          <strong>Zerodha connect</strong>
-          <span>Official Kite login links each WhatsApp user to their own account.</span>
+          <strong>Use backend truth</strong>
+          <span>Supabase and Zerodha provide portfolio state, memory, watchlists, and alerts.</span>
         </div>
         <div class="step">
           <div class="num">5</div>
-          <strong>Bot replies</strong>
-          <span>WhatsApp response is sent with safe portfolio context.</span>
+          <strong>Reply safely</strong>
+          <span>Bot returns concise answers, sourced searches, and safe alert workflows.</span>
         </div>
       </div>
       <div class="metric-row">
-        <div class="metric"><strong>Live</strong><span>Render webhook replies on real WhatsApp.</span></div>
-        <div class="metric"><strong>Opt-in</strong><span>Privacy/terms consent is stored per user.</span></div>
-        <div class="metric"><strong>Search</strong><span>Tavily adds source-backed answers for current public info.</span></div>
-        <div class="metric"><strong>Alerts</strong><span>Saved alerts plus cron path; live triggers need quote permission.</span></div>
+        <div class="metric"><strong>Live</strong><span>WhatsApp webhook deployed on Render and responding to real messages.</span></div>
+        <div class="metric"><strong>6-msg</strong><span>Recent intent context enables natural follow-up commands.</span></div>
+        <div class="metric"><strong>10 min</strong><span>GitHub Actions triggers scheduled alert checks.</span></div>
+        <div class="metric"><strong>Safe</strong><span>No personalized advice and no real order placement.</span></div>
       </div>
     </div>
-    <div class="footer"><span>Core Product Journey</span><span>2 / 4</span></div>
+    <div class="footer"><span>PortfolioPing · Product Journey</span><span>2 / 4</span></div>
   </section>
 
   <section class="slide">
     <div class="header">
       <div>
-        <div class="eyebrow">Technology</div>
-        <h1>Built as a deployed assistant with memory, broker context, and guardrails.</h1>
+        <div class="eyebrow">Technical Execution and OpenAI Workflow</div>
+        <h1>A deployed AI assistant refined with Codex and ChatGPT agent mode.</h1>
       </div>
-      <div class="badge">Phase 1 stack</div>
+      <div class="badge">Integrated, tested, and iterated</div>
     </div>
-    <div class="content architecture">
-      <div class="flow">
-        <div class="flow-row"><strong>WhatsApp</strong><span>Meta Cloud API for inbound and outbound messages.</span></div>
-        <div class="flow-row"><strong>FastAPI</strong><span>Webhook verification, message parsing, legal pages, and Zerodha callback.</span></div>
-        <div class="flow-row"><strong>Render</strong><span>Single free web service using QUEUE_MODE=inline for the MVP demo.</span></div>
-        <div class="flow-row"><strong>cron-job.org</strong><span>Scheduled HTTP trigger checks saved alerts every few minutes.</span></div>
-        <div class="flow-row"><strong>Supabase</strong><span>Postgres storage for users, memory, broker tokens, alerts, and audit events.</span></div>
-        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect login, holdings, and quote-gated LTP prices.</span></div>
-        <div class="flow-row"><strong>LLM + Web Search</strong><span>OpenRouter handles chat and intent; Tavily adds sourced current info.</span></div>
+    <div class="content architecture" style="padding-top: 24px;">
+      <div class="flow compact">
+        <div class="flow-row"><strong>WhatsApp</strong><span>Meta Cloud API handles inbound and outbound user messages.</span></div>
+        <div class="flow-row"><strong>FastAPI + Render</strong><span>Webhook, consent, legal pages, Zerodha callback, and background tasks.</span></div>
+        <div class="flow-row"><strong>Supabase</strong><span>Users, chat history, summaries, broker state, watchlists, alerts, and audit logs.</span></div>
+        <div class="flow-row"><strong>Zerodha</strong><span>Kite Connect login, holdings, positions, and quote-gated LTP access.</span></div>
+        <div class="flow-row"><strong>LLM + Tavily</strong><span>OpenRouter/LangChain classify intent; Tavily adds source-backed current information.</span></div>
+        <div class="flow-row"><strong>GitHub Actions</strong><span>External scheduled alert checker for the Render free-tier deployment.</span></div>
       </div>
       <div>
-        <h2>Guardrail design</h2>
-        <div class="grid-2">
+        <h2 style="font-size: 30px; margin-bottom: 16px;">How OpenAI tools accelerated the build</h2>
+        <div class="grid-2 compact-panels">
           <div class="panel">
-            <strong>No direct advice</strong>
-            <p>The assistant avoids personalized buy/sell recommendations.</p>
+            <strong>Codex Plan mode</strong>
+            <p>Used to break complex integration and debugging tasks into structured execution steps before coding.</p>
           </div>
           <div class="panel">
-            <strong>Backend truth</strong>
-            <p>LLM receives cleaned context and uses links for searched public facts.</p>
+            <strong>Codex implementation</strong>
+            <p>Accelerated backend structure, integrations, deployment fixes, and iterative refinement.</p>
           </div>
           <div class="panel">
-            <strong>Paper trading</strong>
-            <p>Buy/sell flows require confirmation and do not place real orders.</p>
+            <strong>ChatGPT agent mode</strong>
+            <p>Connected to GitHub to inspect code, find root causes, create a branch, and open PR #1.</p>
           </div>
           <div class="panel">
-            <strong>Context memory</strong>
-            <p>Recent messages plus durable summaries keep long conversations coherent.</p>
+            <strong>Guardrails</strong>
+            <p>Backend data is the source of truth; real trades and personalized investment advice stay disabled.</p>
           </div>
         </div>
       </div>
     </div>
-    <div class="footer"><span>Architecture and Safety</span><span>3 / 4</span></div>
+    <div class="footer"><span>PortfolioPing · Architecture and AI Workflow</span><span>3 / 4</span></div>
   </section>
 
   <section class="slide">
     <div class="header">
       <div>
-        <div class="eyebrow">ICP and Next Steps</div>
-        <h1>Designed for Indian retail investors who want a low-friction portfolio companion.</h1>
+        <div class="eyebrow">Impact and Roadmap</div>
+        <h1>A working MVP for simpler, safer portfolio monitoring.</h1>
       </div>
-      <div class="badge">Demo recorded for Phase 1</div>
+      <div class="badge">Core flow ready for final demo</div>
     </div>
     <div class="content">
       <div class="grid-3">
         <div class="panel">
-          <strong>Ideal customer</strong>
-          <p>Beginner and intermediate Indian retail investors who use WhatsApp daily and want faster portfolio awareness.</p>
+          <strong>Who it helps</strong>
+          <p>Beginner and non-technical retail investors who find dashboard-heavy investing apps difficult to navigate.</p>
         </div>
         <div class="panel">
-          <strong>Primary use cases</strong>
-          <p>Consent onboarding, Zerodha connect, portfolio summary, saved price alerts, source-backed search, profile memory, and paper-trade confirmation.</p>
+          <strong>Useful today</strong>
+          <p>Portfolio summary, holdings, positions, watchlists, alert creation, sourced market search, and contextual follow-ups.</p>
         </div>
         <div class="panel">
-          <strong>Why now</strong>
-          <p>Messaging-first workflows plus LLM memory make portfolio tools simpler and more accessible.</p>
+          <strong>Why it is different</strong>
+          <p>No new dashboard to learn. Users access core portfolio workflows through an app they already use daily.</p>
         </div>
       </div>
       <div class="grid-2" style="margin-top: 28px;">
         <div class="panel">
-          <strong>Phase 1 deliverables completed</strong>
+          <strong>Proof from the deployed MVP</strong>
           <ul>
-            <li>Deployed WhatsApp bot on Render.</li>
-            <li>Consent flow and Zerodha connect link working.</li>
-            <li>Tavily web search and scheduled alert checker configured.</li>
+            <li>Live WhatsApp onboarding and secure Zerodha connect flow.</li>
+            <li>Recent context handles “set an alert for it” and “remove the same stock”.</li>
+            <li>GitHub Actions checks saved alerts every 10 minutes.</li>
           </ul>
         </div>
         <div class="panel">
-          <strong>Next build milestones</strong>
+          <strong>Next milestones</strong>
           <ul>
-            <li>Zerodha quote permission for live alert triggers.</li>
-            <li>Multi-intent handling and richer portfolio insights.</li>
-            <li>Real WhatsApp Business number after prototype validation.</li>
+            <li>Enable Zerodha quote/LTP permission for live alert delivery.</li>
+            <li>Add multi-stock and multi-intent requests in one message.</li>
+            <li>Onboard a dedicated WhatsApp Business number for public users.</li>
           </ul>
         </div>
       </div>
+      <div class="callout"><strong>Positioning:</strong> PortfolioPing is a conversational portfolio-monitoring layer, not an investment-advisory platform.</div>
     </div>
-    <div class="footer"><span>Audience and Roadmap</span><span>4 / 4</span></div>
+    <div class="footer"><span>PortfolioPing · Usefulness and Next Steps</span><span>4 / 4</span></div>
   </section>
 </body>
 </html>
